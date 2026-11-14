@@ -764,7 +764,6 @@ GO
 -- 4.5.g - BusinessFeedbackOverview (placeholder)
 
 -- 4.6.a - Add_Customer_Address (placeholder)
-<<<<<<< HEAD
 --yehia tamer mohamed 64-1694
 GO
 CREATE PROCEDURE Add_Customer_Address 
@@ -804,7 +803,7 @@ GO
 CREATE PROCEDURE Update_Delete_Customer_Address 
 @customer_id INT, @address_id INT, @description VARCHAR(150), @zone_id INT, @action VARCHAR(20)
 AS BEGIN
-    IF @customer_id IS NULL OR @address_id IS NULL OR @action<>'update' or @action<>'delete'
+    IF @customer_id IS NULL OR @address_id IS NULL OR @action IS NULL OR @action NOT IN ('update','delete')
         RETURN -1;
     ELSE IF @customer_id<>(SELECT customer_id FROM Address where address_id=@address_id)
         RETURN -3;
@@ -1408,8 +1407,6 @@ AS BEGIN
      END
 END
 GO
-=======
-
 -- 4.6.b - Update_Delete_Customer_Address (placeholder)
 
 -- 4.6.c - Change_Active_Address (placeholder)
@@ -1429,14 +1426,12 @@ GO
 -- 4.6.j - Cancel_Order (placeholder)
 
 -- 4.6.k - Reorder (placeholder)
->>>>>>> 7756a62dbc27cc45bf3f9d9660ea6f329312a60a
 
 -- 4.6.l - Submit_Feedback (placeholder)
 
 -- 4.6.m - Rate_Rider (placeholder)
 
 -- 4.6.n - My_Order_History (placeholder)
-<<<<<<< HEAD
 --yehia tamer mohamed 64-1694
 CREATE FUNCTION My_Order_History (@customer_id INT)
 RETURNS TABLE
@@ -1450,8 +1445,7 @@ AS RETURN(
     GROUP BY o.order_id, o.order_date, z.zone_name, o.status, o.discount_amount,o.total_amount, p.method, p.refunded_amount
 );
 GO
-=======
->>>>>>> 7756a62dbc27cc45bf3f9d9660ea6f329312a60a
+
 
 -- 4.6.o - Toggle_Favorite (placeholder)
 
@@ -1534,7 +1528,4 @@ INNER JOIN dbo.SubOrder AS s ON s.suborder_id= d.suborder_id
 
 -- 4.8.d - Platform_Health_Snapshot (placeholder)
 
-<<<<<<< HEAD
-   
-=======
->>>>>>> 7756a62dbc27cc45bf3f9d9660ea6f329312a60a
+
