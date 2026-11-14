@@ -1,17 +1,16 @@
+-- 4.1.a - LocalDeliveryMarketplace_Team_44
 CREATE DATABASE LocalDeliveryMarketplace_Team_44;
 GO
-
 USE LocalDeliveryMarketplace_Team_44;
 GO
-
+-- 4.1.b - createAllTables
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE PROCEDURE dbo.createAllTables
 AS
 BEGIN
     BEGIN TRY
     BEGIN TRANSACTION;
-
-    CREATE TABLE dbo.Zone(
+ CREATE TABLE dbo.Zone(
         zone_id int identity(1,1) NOT NULL,
         zone_name varchar(50) NOT NULL UNIQUE,
         delivery_fee decimal(10,2) NOT NULL CHECK (delivery_fee >= 0),
@@ -48,8 +47,7 @@ BEGIN
         zone_id int NULL,
         PRIMARY KEY (admin_id),
         CONSTRAINT FK_Admin_admin_id FOREIGN KEY (admin_id) REFERENCES dbo.Users(user_id),
-        CONSTRAINT FK_Admin_zone_id FOREIGN KEY (zone_id) REFERENCES dbo.Zone(zone_id),
-        CHECK ((role = 'Super Admin' AND zone_id IS NULL) OR (role = 'Zone Admin' AND zone_id IS NOT NULL))
+        CONSTRAINT FK_Admin_zone_id FOREIGN KEY (zone_id) REFERENCES dbo.Zone(zone_id)
     );
 
     CREATE TABLE dbo.Partner
@@ -71,8 +69,6 @@ BEGIN
         CONSTRAINT FK_Rider_rider_id FOREIGN KEY (rider_id) REFERENCES dbo.Users(user_id),
         CONSTRAINT FK_Rider_zone_id FOREIGN KEY (zone_id) REFERENCES dbo.Zone(zone_id)
     );
-
-
 
     CREATE TABLE dbo.Customer
     (
@@ -120,8 +116,7 @@ BEGIN
         zone_id int NOT NULL,
         PRIMARY KEY (business_id),
         CONSTRAINT FK_Business_partner_id FOREIGN KEY (partner_id) REFERENCES dbo.Partner(partner_id),
-        CONSTRAINT FK_Business_zone_id FOREIGN KEY (zone_id) REFERENCES dbo.Zone(zone_id),
-        CHECK (status = 'Suspended' OR suspension_reason IS NULL)
+        CONSTRAINT FK_Business_zone_id FOREIGN KEY (zone_id) REFERENCES dbo.Zone(zone_id)
     );
 
     CREATE TABLE dbo.Business_Phone
@@ -131,8 +126,6 @@ BEGIN
         PRIMARY KEY (business_id, phone),
         CONSTRAINT FK_Business_Phone_business_id FOREIGN KEY (business_id) REFERENCES dbo.Business(business_id)
     );
-
-
 
     CREATE TABLE dbo.Restaurant
     (
@@ -204,8 +197,7 @@ BEGIN
         status varchar(20) NOT NULL DEFAULT 'Unused' CHECK (status IN ('Unused', 'Used')),
         customer_id int NOT NULL,
         PRIMARY KEY (voucher_id),
-        CONSTRAINT FK_Voucher_customer_id FOREIGN KEY (customer_id) REFERENCES dbo.Customer(customer_id),
-        CHECK (is_percentage = 0 OR amount BETWEEN 1 AND 100)
+        CONSTRAINT FK_Voucher_customer_id FOREIGN KEY (customer_id) REFERENCES dbo.Customer(customer_id)
     );
 
     CREATE TABLE dbo.Cart
@@ -319,734 +311,459 @@ GO
 EXEC dbo.createAllTables;
 GO
 
+-- 4.1.c - dropAllTables
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE PROCEDURE dbo.dropAllTables
 AS
 BEGIN
     BEGIN TRY
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
-    DROP TABLE dbo.Feedback;
-    DROP TABLE dbo.Payment;
-    DROP TABLE dbo.Delivery;
-    DROP TABLE dbo.SubOrder;
-    DROP TABLE dbo.Orders;
-    DROP TABLE dbo.CartItem;
-    DROP TABLE dbo.Cart;
-    DROP TABLE dbo.Voucher;
-    DROP TABLE dbo.Favorite_Product;
-    DROP TABLE dbo.Favorite_Business;
-    DROP TABLE dbo.Product;
-    DROP TABLE dbo.Blacklist;
-    DROP TABLE dbo.Pharmacy;
-    DROP TABLE dbo.Restaurant;
-    DROP TABLE dbo.Business_Phone;
-    DROP TABLE dbo.Business;
-    DROP TABLE dbo.Card;
-    DROP TABLE dbo.Address;
-    DROP TABLE dbo.Customer;
-    DROP TABLE dbo.Rider;
-    DROP TABLE dbo.Partner;
-    DROP TABLE dbo.Admin;
-    DROP TABLE dbo.User_Phone;
-    DROP TABLE dbo.Users;
-    DROP TABLE dbo.Zone;
+        DROP TABLE dbo.Feedback;
+        DROP TABLE dbo.Payment;
+        DROP TABLE dbo.Delivery;
+        DROP TABLE dbo.SubOrder;
+        DROP TABLE dbo.Orders;
+        DROP TABLE dbo.CartItem;
+        DROP TABLE dbo.Cart;
+        DROP TABLE dbo.Voucher;
+        DROP TABLE dbo.Favorite_Product;
+        DROP TABLE dbo.Favorite_Business;
+        DROP TABLE dbo.Product;
+        DROP TABLE dbo.Blacklist;
+        DROP TABLE dbo.Pharmacy;
+        DROP TABLE dbo.Restaurant;
+        DROP TABLE dbo.Business_Phone;
+        DROP TABLE dbo.Business;
+        DROP TABLE dbo.Card;
+        DROP TABLE dbo.Address;
+        DROP TABLE dbo.Customer;
+        DROP TABLE dbo.Rider;
+        DROP TABLE dbo.Partner;
+        DROP TABLE dbo.Admin;
+        DROP TABLE dbo.User_Phone;
+        DROP TABLE dbo.Users;
+        DROP TABLE dbo.Zone;
 
-    COMMIT TRANSACTION;
-    RETURN 0;
+        COMMIT TRANSACTION;
+        RETURN 0;
     END TRY
     BEGIN CATCH
-    IF @@TRANCOUNT > 0
-        ROLLBACK TRANSACTION;
-    RETURN -1;
+        IF @@TRANCOUNT > 0
+        BEGIN
+            ROLLBACK TRANSACTION;
+        END;
+
+        RETURN -1;
     END CATCH;
 END;
 GO
 
+-- 4.1.d - dropAllProceduresFunctionsViews
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE PROCEDURE dbo.dropAllProceduresFunctionsViews
 AS
 BEGIN
     BEGIN TRY
-    BEGIN TRANSACTION;
-
-    BEGIN TRY DROP VIEW dbo.allBusinessProfiles; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP VIEW dbo.BusinessRatingsSummary; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP VIEW dbo.ActiveVouchers; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP VIEW dbo.PendingBusinessApprovals; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP VIEW dbo.RiderPerformanceSummary; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP VIEW dbo.TopSellingProducts; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP VIEW dbo.ZoneDeliveryPerformance; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.CustomerLoginValidation; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.PartnerLoginValidation; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.RiderLoginValidation; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.AdminLoginValidation; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.TopRiders; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.BusinessSalesReport; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.BusinessFeedbackOverview; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.Calculate_Voucher_Discount; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.My_Order_History; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.My_Favorites; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.Recommended_Products; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.My_Active_Deliveries; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.My_Earnings; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.My_Rating_Summary; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.My_Delivery_History; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.Search_Platform; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.Reconcile_Order_Totals; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.Nearby_Businesses_By_Category; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.Platform_Health_Snapshot; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP FUNCTION dbo.Detect_Voucher_Abuse; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Customer_Register; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Partner_Register; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Rider_Register; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Change_Password; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Create_Admin; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Approve_Business; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Reject_Business; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Assign_Admin_Zone; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Issue_Voucher; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Blacklist_Customer; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Lift_Customer_Blacklist; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Register_Business; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Update_Business_Info; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Upsert_Product; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Toggle_Product_Status; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Set_Product_Promotion; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Add_Customer_Address; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Update_Delete_Customer_Address; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Add_Card; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Create_Cart; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Add_To_Cart; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Remove_From_Cart; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Checkout_Cart; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Cancel_Order; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Reorder; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Submit_Feedback; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Rate_Rider; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Toggle_Favorite; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Set_Rider_Availability; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Mark_Picked_Up; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Mark_Delivered; END TRY
-    BEGIN CATCH END CATCH;
-
-    BEGIN TRY DROP PROCEDURE dbo.Change_Active_Address; END TRY
-    BEGIN CATCH END CATCH;
-
-    DROP VIEW dbo.BusinessesPerZone;
-    DROP FUNCTION dbo.ZoneOrderReport;
-    DROP FUNCTION dbo.Daily_Revenue_Report;
-    DROP PROCEDURE dbo.createAllTables;
-    DROP PROCEDURE dbo.dropAllTables;
-    DROP PROCEDURE dbo.clearAllTables;
-    DROP PROCEDURE dbo.Suspend_Business;
-    DROP PROCEDURE dbo.Reinstate_Business;
-    DROP PROCEDURE dbo.Create_Zone;
-    DROP PROCEDURE dbo.Update_Zone_Fee;
-
-    COMMIT TRANSACTION;
-    RETURN 0;
+        BEGIN TRANSACTION;
+        DROP PROCEDURE dbo.Suspend_Business;
+        DROP PROCEDURE dbo.Reinstate_Business;
+        DROP PROCEDURE dbo.Create_Zone;
+        DROP PROCEDURE dbo.Update_Zone_Fee;
+        DROP PROCEDURE dbo.clearAllTables;
+        DROP PROCEDURE dbo.dropAllTables;
+        DROP PROCEDURE dbo.createAllTables;
+        DROP FUNCTION dbo.ZoneOrderReport;
+        DROP FUNCTION dbo.Daily_Revenue_Report;
+        DROP FUNCTION dbo.BusinessRefunds;
+        DROP VIEW dbo.BusinessesPerZone;
+        COMMIT TRANSACTION;
+        RETURN 0;
     END TRY
     BEGIN CATCH
-    IF @@TRANCOUNT > 0
-        ROLLBACK TRANSACTION;
-    RETURN -1;
-    END CATCH;
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        RETURN -1;
+    END CATCH
 END;
 GO
 
+-- 4.1.e - clearAllTables
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE PROCEDURE dbo.clearAllTables
 AS
 BEGIN
+    DECLARE @result int;
+
     BEGIN TRY
-    BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
 
-    ALTER TABLE dbo.User_Phone DROP CONSTRAINT FK_User_Phone_user_id;
-    ALTER TABLE dbo.Admin DROP CONSTRAINT FK_Admin_admin_id;
-    ALTER TABLE dbo.Admin DROP CONSTRAINT FK_Admin_zone_id;
-    ALTER TABLE dbo.Partner DROP CONSTRAINT FK_Partner_partner_id;
-    ALTER TABLE dbo.Rider DROP CONSTRAINT FK_Rider_rider_id;
-    ALTER TABLE dbo.Rider DROP CONSTRAINT FK_Rider_zone_id;
-    ALTER TABLE dbo.Customer DROP CONSTRAINT FK_Customer_customer_id;
-    ALTER TABLE dbo.Address DROP CONSTRAINT FK_Address_customer_id;
-    ALTER TABLE dbo.Address DROP CONSTRAINT FK_Address_zone_id;
-    ALTER TABLE dbo.Card DROP CONSTRAINT FK_Card_customer_id;
-    ALTER TABLE dbo.Business DROP CONSTRAINT FK_Business_partner_id;
-    ALTER TABLE dbo.Business DROP CONSTRAINT FK_Business_zone_id;
-    ALTER TABLE dbo.Business_Phone DROP CONSTRAINT FK_Business_Phone_business_id;
-    ALTER TABLE dbo.Restaurant DROP CONSTRAINT FK_Restaurant_business_id;
-    ALTER TABLE dbo.Pharmacy DROP CONSTRAINT FK_Pharmacy_business_id;
-    ALTER TABLE dbo.Blacklist DROP CONSTRAINT FK_Blacklist_customer_id;
-    ALTER TABLE dbo.Blacklist DROP CONSTRAINT FK_Blacklist_admin_id;
-    ALTER TABLE dbo.Product DROP CONSTRAINT FK_Product_business_id;
-    ALTER TABLE dbo.Favorite_Business DROP CONSTRAINT FK_Favorite_Business_customer_id;
-    ALTER TABLE dbo.Favorite_Business DROP CONSTRAINT FK_Favorite_Business_business_id;
-    ALTER TABLE dbo.Favorite_Product DROP CONSTRAINT FK_Favorite_Product_customer_id;
-    ALTER TABLE dbo.Favorite_Product DROP CONSTRAINT FK_Favorite_Product_product_id;
-    ALTER TABLE dbo.Voucher DROP CONSTRAINT FK_Voucher_customer_id;
-    ALTER TABLE dbo.Cart DROP CONSTRAINT FK_Cart_customer_id;
-    ALTER TABLE dbo.Cart DROP CONSTRAINT FK_Cart_address_id;
-    ALTER TABLE dbo.CartItem DROP CONSTRAINT FK_CartItem_cart_id;
-    ALTER TABLE dbo.CartItem DROP CONSTRAINT FK_CartItem_product_id;
-    ALTER TABLE dbo.Orders DROP CONSTRAINT FK_Orders_cart_id;
-    ALTER TABLE dbo.Orders DROP CONSTRAINT FK_Orders_zone_id;
-    ALTER TABLE dbo.Orders DROP CONSTRAINT FK_Orders_voucher_id;
-    ALTER TABLE dbo.SubOrder DROP CONSTRAINT FK_SubOrder_order_id;
-    ALTER TABLE dbo.SubOrder DROP CONSTRAINT FK_SubOrder_business_id;
-    ALTER TABLE dbo.Delivery DROP CONSTRAINT FK_Delivery_suborder_id;
-    ALTER TABLE dbo.Delivery DROP CONSTRAINT FK_Delivery_rider_id;
-    ALTER TABLE dbo.Payment DROP CONSTRAINT FK_Payment_order_id;
-    ALTER TABLE dbo.Payment DROP CONSTRAINT FK_Payment_card_id;
-    ALTER TABLE dbo.Feedback DROP CONSTRAINT FK_Feedback_suborder_id;
+        EXEC @result = dbo.dropAllTables;
+        IF @result = 0
+            EXEC @result = dbo.createAllTables;
 
-    TRUNCATE TABLE dbo.Feedback;
-    TRUNCATE TABLE dbo.Payment;
-    TRUNCATE TABLE dbo.Delivery;
-    TRUNCATE TABLE dbo.SubOrder;
-    TRUNCATE TABLE dbo.Orders;
-    TRUNCATE TABLE dbo.CartItem;
-    TRUNCATE TABLE dbo.Cart;
-    TRUNCATE TABLE dbo.Voucher;
-    TRUNCATE TABLE dbo.Favorite_Product;
-    TRUNCATE TABLE dbo.Favorite_Business;
-    TRUNCATE TABLE dbo.Product;
-    TRUNCATE TABLE dbo.Blacklist;
-    TRUNCATE TABLE dbo.Pharmacy;
-    TRUNCATE TABLE dbo.Restaurant;
-    TRUNCATE TABLE dbo.Business_Phone;
-    TRUNCATE TABLE dbo.Business;
-    TRUNCATE TABLE dbo.Card;
-    TRUNCATE TABLE dbo.Address;
-    TRUNCATE TABLE dbo.Customer;
-    TRUNCATE TABLE dbo.Rider;
-    TRUNCATE TABLE dbo.Partner;
-    TRUNCATE TABLE dbo.Admin;
-    TRUNCATE TABLE dbo.User_Phone;
-    TRUNCATE TABLE dbo.Users;
-    TRUNCATE TABLE dbo.Zone;
+        IF @result <> 0
+        BEGIN
+            IF @@TRANCOUNT > 0
+                ROLLBACK TRANSACTION;
+            RETURN @result;
+        END;
 
-    ALTER TABLE dbo.User_Phone ADD CONSTRAINT FK_User_Phone_user_id
-        FOREIGN KEY (user_id) REFERENCES dbo.Users(user_id);
-    ALTER TABLE dbo.Admin ADD CONSTRAINT FK_Admin_admin_id
-        FOREIGN KEY (admin_id) REFERENCES dbo.Users(user_id);
-    ALTER TABLE dbo.Admin ADD CONSTRAINT FK_Admin_zone_id
-        FOREIGN KEY (zone_id) REFERENCES dbo.Zone(zone_id);
-    ALTER TABLE dbo.Partner ADD CONSTRAINT FK_Partner_partner_id
-        FOREIGN KEY (partner_id) REFERENCES dbo.Users(user_id);
-    ALTER TABLE dbo.Rider ADD CONSTRAINT FK_Rider_rider_id
-        FOREIGN KEY (rider_id) REFERENCES dbo.Users(user_id);
-    ALTER TABLE dbo.Rider ADD CONSTRAINT FK_Rider_zone_id
-        FOREIGN KEY (zone_id) REFERENCES dbo.Zone(zone_id);
-    ALTER TABLE dbo.Customer ADD CONSTRAINT FK_Customer_customer_id
-        FOREIGN KEY (customer_id) REFERENCES dbo.Users(user_id);
-    ALTER TABLE dbo.Address ADD CONSTRAINT FK_Address_customer_id
-        FOREIGN KEY (customer_id) REFERENCES dbo.Customer(customer_id);
-    ALTER TABLE dbo.Address ADD CONSTRAINT FK_Address_zone_id
-        FOREIGN KEY (zone_id) REFERENCES dbo.Zone(zone_id);
-    ALTER TABLE dbo.Card ADD CONSTRAINT FK_Card_customer_id
-        FOREIGN KEY (customer_id) REFERENCES dbo.Customer(customer_id);
-    ALTER TABLE dbo.Business ADD CONSTRAINT FK_Business_partner_id
-        FOREIGN KEY (partner_id) REFERENCES dbo.Partner(partner_id);
-    ALTER TABLE dbo.Business ADD CONSTRAINT FK_Business_zone_id
-        FOREIGN KEY (zone_id) REFERENCES dbo.Zone(zone_id);
-    ALTER TABLE dbo.Business_Phone ADD CONSTRAINT FK_Business_Phone_business_id
-        FOREIGN KEY (business_id) REFERENCES dbo.Business(business_id);
-    ALTER TABLE dbo.Restaurant ADD CONSTRAINT FK_Restaurant_business_id
-        FOREIGN KEY (business_id) REFERENCES dbo.Business(business_id);
-    ALTER TABLE dbo.Pharmacy ADD CONSTRAINT FK_Pharmacy_business_id
-        FOREIGN KEY (business_id) REFERENCES dbo.Business(business_id);
-    ALTER TABLE dbo.Blacklist ADD CONSTRAINT FK_Blacklist_customer_id
-        FOREIGN KEY (customer_id) REFERENCES dbo.Customer(customer_id);
-    ALTER TABLE dbo.Blacklist ADD CONSTRAINT FK_Blacklist_admin_id
-        FOREIGN KEY (admin_id) REFERENCES dbo.Admin(admin_id);
-    ALTER TABLE dbo.Product ADD CONSTRAINT FK_Product_business_id
-        FOREIGN KEY (business_id) REFERENCES dbo.Business(business_id);
-    ALTER TABLE dbo.Favorite_Business ADD CONSTRAINT FK_Favorite_Business_customer_id
-        FOREIGN KEY (customer_id) REFERENCES dbo.Customer(customer_id);
-    ALTER TABLE dbo.Favorite_Business ADD CONSTRAINT FK_Favorite_Business_business_id
-        FOREIGN KEY (business_id) REFERENCES dbo.Business(business_id);
-    ALTER TABLE dbo.Favorite_Product ADD CONSTRAINT FK_Favorite_Product_customer_id
-        FOREIGN KEY (customer_id) REFERENCES dbo.Customer(customer_id);
-    ALTER TABLE dbo.Favorite_Product ADD CONSTRAINT FK_Favorite_Product_product_id
-        FOREIGN KEY (product_id) REFERENCES dbo.Product(product_id);
-    ALTER TABLE dbo.Voucher ADD CONSTRAINT FK_Voucher_customer_id
-        FOREIGN KEY (customer_id) REFERENCES dbo.Customer(customer_id);
-    ALTER TABLE dbo.Cart ADD CONSTRAINT FK_Cart_customer_id
-        FOREIGN KEY (customer_id) REFERENCES dbo.Customer(customer_id);
-    ALTER TABLE dbo.Cart ADD CONSTRAINT FK_Cart_address_id
-        FOREIGN KEY (address_id) REFERENCES dbo.Address(address_id);
-    ALTER TABLE dbo.CartItem ADD CONSTRAINT FK_CartItem_cart_id
-        FOREIGN KEY (cart_id) REFERENCES dbo.Cart(cart_id);
-    ALTER TABLE dbo.CartItem ADD CONSTRAINT FK_CartItem_product_id
-        FOREIGN KEY (product_id) REFERENCES dbo.Product(product_id);
-    ALTER TABLE dbo.Orders ADD CONSTRAINT FK_Orders_cart_id
-        FOREIGN KEY (cart_id) REFERENCES dbo.Cart(cart_id);
-    ALTER TABLE dbo.Orders ADD CONSTRAINT FK_Orders_zone_id
-        FOREIGN KEY (zone_id) REFERENCES dbo.Zone(zone_id);
-    ALTER TABLE dbo.Orders ADD CONSTRAINT FK_Orders_voucher_id
-        FOREIGN KEY (voucher_id) REFERENCES dbo.Voucher(voucher_id);
-    ALTER TABLE dbo.SubOrder ADD CONSTRAINT FK_SubOrder_order_id
-        FOREIGN KEY (order_id) REFERENCES dbo.Orders(order_id);
-    ALTER TABLE dbo.SubOrder ADD CONSTRAINT FK_SubOrder_business_id
-        FOREIGN KEY (business_id) REFERENCES dbo.Business(business_id);
-    ALTER TABLE dbo.Delivery ADD CONSTRAINT FK_Delivery_suborder_id
-        FOREIGN KEY (suborder_id) REFERENCES dbo.SubOrder(suborder_id);
-    ALTER TABLE dbo.Delivery ADD CONSTRAINT FK_Delivery_rider_id
-        FOREIGN KEY (rider_id) REFERENCES dbo.Rider(rider_id);
-    ALTER TABLE dbo.Payment ADD CONSTRAINT FK_Payment_order_id
-        FOREIGN KEY (order_id) REFERENCES dbo.Orders(order_id);
-    ALTER TABLE dbo.Payment ADD CONSTRAINT FK_Payment_card_id
-        FOREIGN KEY (card_id) REFERENCES dbo.Card(card_id);
-    ALTER TABLE dbo.Feedback ADD CONSTRAINT FK_Feedback_suborder_id
-        FOREIGN KEY (suborder_id) REFERENCES dbo.SubOrder(suborder_id);
-
-    COMMIT TRANSACTION;
-    RETURN 0;
+        COMMIT TRANSACTION;
+        RETURN 0;
     END TRY
     BEGIN CATCH
-    IF @@TRANCOUNT > 0
-        ROLLBACK TRANSACTION;
-    RETURN -1;
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        RETURN -1;
     END CATCH;
 END;
 GO
 
+-- 4.2.a - allBusinessProfiles (placeholder)
+
+-- 4.2.b - BusinessesPerZone
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE VIEW dbo.BusinessesPerZone
 AS
-    SELECT z.zone_id, z.zone_name, COUNT(b.business_id) AS business_count
-    FROM dbo.Zone AS z
-    LEFT JOIN dbo.Business AS b ON b.zone_id = z.zone_id AND b.status = 'Active'
-    GROUP BY z.zone_id, z.zone_name;
+SELECT z.zone_id, z.zone_name, COUNT(b.business_id) AS business_count
+FROM dbo.Zone z
+LEFT JOIN dbo.Business b ON b.zone_id = z.zone_id AND b.status = 'Active'
+GROUP BY z.zone_id, z.zone_name;
 GO
 
--- mohamed mostafa hassan mohamed - 65-33784
-CREATE PROCEDURE dbo.Suspend_Business
-    @business_id int,
-    @admin_id int,
-    @reason varchar(255)
+-- 4.2.c - BusinessRatingsSummary
+--Maryam Mustafa Abdelwahab- 64-3003
+GO
+CREATE VIEW dbo.BusinessRatingsSummary
 AS
-BEGIN
-     IF @business_id IS NULL OR @admin_id IS NULL OR @reason IS NULL OR @reason = ''
-    RETURN -1;
-
-
-    IF NOT EXISTS
-    (
-    SELECT 1
-    FROM dbo.Admin AS a
-    INNER JOIN dbo.Users AS u ON u.user_id = a.admin_id
-    INNER JOIN dbo.Business AS b ON b.business_id = @business_id
-    WHERE a.admin_id = @admin_id AND u.account_status = 'Active'
-      AND (a.role = 'Super Admin' OR (a.role = 'Zone Admin' AND a.zone_id = b.zone_id))
-    )
-    RETURN -3;
-
-    IF NOT EXISTS (SELECT 1 FROM dbo.Business WHERE business_id = @business_id AND status = 'Active')
-    RETURN -4;
-
-    IF EXISTS
-    (
-    SELECT 1 FROM dbo.SubOrder AS s
-    WHERE s.business_id = @business_id AND s.status IN ('Placed', 'Assigned')
-      AND NOT EXISTS (SELECT 1 FROM dbo.Payment AS p WHERE p.order_id = s.order_id)
-    )
-    RETURN -7;
-
-    BEGIN TRY
-    BEGIN TRANSACTION;
-
-    UPDATE dbo.Customer
-    SET wallet_balance = wallet_balance + ISNULL(
-        (SELECT SUM(refunds.refund_amount) FROM
-         (SELECT c.customer_id, CASE
-        WHEN NOT EXISTS (SELECT 1 FROM dbo.SubOrder AS other
-                 WHERE other.order_id = s.order_id
-                   AND other.suborder_id <> s.suborder_id
-                   AND other.status <> 'Cancelled')
-             OR s.total_price + s.delivery_fee > p.amount - p.refunded_amount
-        THEN p.amount - p.refunded_amount
-        ELSE s.total_price + s.delivery_fee END AS refund_amount
-         FROM dbo.SubOrder AS s
-         INNER JOIN dbo.Payment AS p ON p.order_id = s.order_id
-         INNER JOIN dbo.Orders AS o ON o.order_id = s.order_id
-         INNER JOIN dbo.Cart AS c ON c.cart_id = o.cart_id
-         WHERE s.business_id = @business_id AND s.status IN ('Placed', 'Assigned')
-           AND p.method <> 'Cash') AS refunds
-         WHERE refunds.customer_id = Customer.customer_id), 0)
-    WHERE customer_id IN
-    (
-        SELECT c.customer_id FROM dbo.Cart AS c
-        INNER JOIN dbo.Orders AS o ON o.cart_id = c.cart_id
-        INNER JOIN dbo.SubOrder AS s ON s.order_id = o.order_id
-        WHERE s.business_id = @business_id AND s.status IN ('Placed', 'Assigned')
-    );
-
-    UPDATE dbo.Payment
-    SET refunded_amount = refunded_amount +
-        (SELECT CASE
-        WHEN NOT EXISTS (SELECT 1 FROM dbo.SubOrder AS other
-                 WHERE other.order_id = s.order_id
-                   AND other.suborder_id <> s.suborder_id
-                   AND other.status <> 'Cancelled')
-             OR s.total_price + s.delivery_fee > Payment.amount - Payment.refunded_amount
-        THEN Payment.amount - Payment.refunded_amount
-        ELSE s.total_price + s.delivery_fee END
-         FROM dbo.SubOrder AS s
-         WHERE s.order_id = Payment.order_id AND s.business_id = @business_id
-           AND s.status IN ('Placed', 'Assigned'))
-    WHERE order_id IN
-    (
-        SELECT order_id FROM dbo.SubOrder
-        WHERE business_id = @business_id AND status IN ('Placed', 'Assigned')
-    );
-    UPDATE dbo.Orders
-    SET status = CASE
-        WHEN NOT EXISTS
-        (SELECT 1 FROM dbo.SubOrder AS s WHERE s.order_id = Orders.order_id
-         AND s.status <> 'Cancelled'
-         AND NOT (s.business_id = @business_id AND s.status IN ('Placed', 'Assigned')))
-        THEN 'Cancelled'
-        WHEN NOT EXISTS
-        (SELECT 1 FROM dbo.SubOrder AS s WHERE s.order_id = Orders.order_id
-         AND s.status NOT IN ('Cancelled', 'Delivered')
-         AND NOT (s.business_id = @business_id AND s.status IN ('Placed', 'Assigned')))
-        THEN 'Delivered'
-        WHEN EXISTS
-        (SELECT 1 FROM dbo.SubOrder AS s WHERE s.order_id = Orders.order_id
-         AND s.status IN ('Picked Up', 'Delivered'))
-        THEN 'In Progress'
-        ELSE 'Placed' END
-    WHERE order_id IN
-    (
-        SELECT order_id FROM dbo.SubOrder
-        WHERE business_id = @business_id AND status IN ('Placed', 'Assigned')
-    );
-
-    UPDATE dbo.Voucher
-    SET status = 'Unused'
-    WHERE voucher_id IN
-    (
-        SELECT o.voucher_id FROM dbo.Orders AS o
-        INNER JOIN dbo.SubOrder AS s ON s.order_id = o.order_id
-        WHERE o.status = 'Cancelled' AND s.business_id = @business_id
-          AND s.status IN ('Placed', 'Assigned')
-    );
-
-    UPDATE dbo.Orders
-    SET voucher_id = NULL
-    WHERE status = 'Cancelled' AND order_id IN
-    (
-        SELECT order_id FROM dbo.SubOrder
-        WHERE business_id = @business_id AND status IN ('Placed', 'Assigned')
-    );
-
-    UPDATE dbo.SubOrder
-    SET status = 'Cancelled'
-    WHERE business_id = @business_id AND status IN ('Placed', 'Assigned');
-
-    UPDATE dbo.Product
-    SET is_available = 0
-    WHERE business_id = @business_id;
-
-    UPDATE dbo.Business
-    SET status = 'Suspended', suspension_reason = @reason
-    WHERE business_id = @business_id;
-
-    COMMIT TRANSACTION;
-    RETURN 0;
-    END TRY
-    BEGIN CATCH
-    IF @@TRANCOUNT > 0
-        ROLLBACK TRANSACTION;
-    RETURN -1;
-    END CATCH;
-END;
+SELECT b.business_id, b.name AS business_name,
+CAST(AVG(CAST(f.rating AS decimal(10,2))) AS decimal(10,2)) AS avg_rating, COUNT(f.feedback_id) as 
+ratings_count
+FROM dbo.Business b
+LEFT JOIN dbo.SubOrder AS s ON s.business_id = b.business_id
+LEFT JOIN dbo.Feedback AS f ON f.suborder_id = s.suborder_id
+GROUP BY b.business_id, b.name;
 GO
 
--- mohamed mostafa hassan mohamed - 65-33784
-CREATE PROCEDURE dbo.Reinstate_Business
-    @business_id int,
-    @super_admin_id int
+-- 4.2.d - ActiveVouchers (placeholder)
+
+-- 4.2.e - PendingBusinessApprovals (placeholder)
+
+-- 4.2.f - RiderPerformanceSummary
+-- Maryam Mustafa Abdelwahab - 64-3003
+CREATE VIEW dbo.RiderPerformanceSummary
+AS 
+SELECT r.rider_id, u.first_name + ' ' + u.last_name AS rider_name,
+z.zone_name, COUNT(CASE WHEN s.status='Delievered' THEN 1 END) AS completed_deliveries,
+CAST(AVG(CAST(d.rider_rating AS decimal(10,2))) as decimal(10,2)) as average_rating
+FROM dbo.Rider r
+INNER JOIN dbo.Users as u ON u.user_id=r.rider_id
+INNER JOIN dbo.Zones AS z ON z.zone_id=r.zone_id
+LEFT JOIN dbo.Delivery AS d ON d.rider_id=r.rider_id
+LEFT JOIN dbo.SubOrder AS s ON s.suborder_id=d.suborder_id
+GROUP BY r.rider_id,u.first_name,u.last_name,zone_id;
+GO
+
+-- 4.2.g - TopSellingProducts (placeholder)
+
+-- 4.2.h - ZoneDeliveryPerformance
+-- Maryam Mustafa Abdelwahab - 64-3003
+CREATE VIEW dbo.ZoneDeliveryPerformance
 AS
-BEGIN
-    IF @business_id IS NULL OR @super_admin_id IS NULL
-    RETURN -1;
-
-    IF NOT EXISTS
-    (
-    SELECT 1 FROM dbo.Admin AS a
-    INNER JOIN dbo.Users AS u ON u.user_id = a.admin_id
-    WHERE a.admin_id = @super_admin_id AND a.role = 'Super Admin'
-      AND u.account_status = 'Active'
-    )
-    RETURN -3;
-
-    IF NOT EXISTS (SELECT 1 FROM dbo.Business
-           WHERE business_id = @business_id AND status = 'Suspended')
-    RETURN -4;
-
-    BEGIN TRY
-    UPDATE dbo.Business
-    SET status = 'Active', suspension_reason = NULL
-    WHERE business_id = @business_id AND status = 'Suspended';
-
-    RETURN 0;
-    END TRY
-    BEGIN CATCH
-    RETURN -1;
-    END CATCH;
-END;
+SELECT z.zone_id , z.zone_name , COUNT(dd.delivery_id) AS delivery_count,
+CAST(AVG(CAST(dd.tracking_time as decimal(10,2))) as decimal(10,2)) as avg_tracking_time
+FROM dbo.Zone z
+LEFT JOIN ( select o.zone_id , d.delivery_id , d.tracking_time FROM dbo.Orders AS o 
+INNER JOIN dbo.SubOrder AS s ON s.order_id=o.order_id
+INNER JOIN dbo.Delivery AS d ON d.suborder_id=s.suborder_id
+WHERE s.status='Delivered')
+AS  dd ON dd.zone_id=z.zone_id
+GROUP BY z.zone_id,z.zone_name;
 GO
 
--- mohamed mostafa hassan mohamed - 65-33784
-CREATE PROCEDURE dbo.Create_Zone
-    @zone_name varchar(50),
-    @delivery_fee decimal(10,2),
-    @super_admin_id int
-AS
-BEGIN
-    IF @zone_name IS NULL OR @zone_name = ''
-       OR @delivery_fee IS NULL OR @delivery_fee < 0 OR @super_admin_id IS NULL
-    RETURN -1;
+-- 4.3.a - Customer_Register (placeholder)
 
-    IF NOT EXISTS
-    (
-    SELECT 1 FROM dbo.Admin AS a
-    INNER JOIN dbo.Users AS u ON u.user_id = a.admin_id
-    WHERE a.admin_id = @super_admin_id AND a.role = 'Super Admin'
-      AND u.account_status = 'Active'
-    )
-    RETURN -3;
+-- 4.3.b - Partner_Register (placeholder)
 
-    IF EXISTS (SELECT 1 FROM dbo.Zone WHERE zone_name = @zone_name)
-    RETURN -2;
+-- 4.3.c - Rider_Register (placeholder)
 
-    BEGIN TRY
-    INSERT INTO dbo.Zone (zone_name, delivery_fee)
-    VALUES (@zone_name, @delivery_fee);
-    RETURN 0;
-    END TRY
-    BEGIN CATCH
-    RETURN -1;
-    END CATCH;
-END;
-GO
+-- 4.3.d - CustomerLoginValidation (placeholder)
+
+-- 4.3.e - PartnerLoginValidation (placeholder)
+
+-- 4.3.f - RiderLoginValidation (placeholder)
+
+-- 4.3.g - AdminLoginValidation (placeholder)
+
+-- 4.3.h - Change_Password (placeholder)
+
+-- 4.4.a - Create_Admin (placeholder)
+
+-- 4.4.b - Approve_Business (placeholder)
+
+-- 4.4.c - Reject_Business (placeholder)
 
 -- mohamed mostafa hassan mohamed - 65-33784
-CREATE PROCEDURE dbo.Update_Zone_Fee
-    @zone_id int,
-    @new_fee decimal(10,2),
-    @super_admin_id int
-AS
-BEGIN
-    IF @zone_id IS NULL OR @new_fee IS NULL OR @new_fee < 0 OR @super_admin_id IS NULL
-    RETURN -1;
-
-    IF NOT EXISTS
-    (
-    SELECT 1 FROM dbo.Admin AS a
-    INNER JOIN dbo.Users AS u ON u.user_id = a.admin_id
-    WHERE a.admin_id = @super_admin_id AND a.role = 'Super Admin'
-      AND u.account_status = 'Active'
-    )
-    RETURN -3;
-
-    IF NOT EXISTS (SELECT 1 FROM dbo.Zone WHERE zone_id = @zone_id)
-    RETURN -1;
-
-    BEGIN TRY
-    UPDATE dbo.Zone
-    SET delivery_fee = @new_fee
-    WHERE zone_id = @zone_id;
-
-    RETURN 0;
-    END TRY
-    BEGIN CATCH
-    RETURN -1;
-    END CATCH;
-END;
-GO
-
--- mohamed mostafa hassan mohamed - 65-33784
-CREATE FUNCTION dbo.ZoneOrderReport
-(
-    @zone_id int,
-    @from_date date,
-    @to_date date
-)
+CREATE FUNCTION dbo.BusinessRefunds(@business_id int)
 RETURNS TABLE
 AS
 RETURN
 (
-    SELECT z.zone_id, z.zone_name,
-    (SELECT COUNT(*) FROM dbo.Orders AS o
-     WHERE o.zone_id = z.zone_id AND o.status <> 'Cancelled'
-     AND CAST(o.order_date AS date) BETWEEN @from_date AND @to_date) AS number_of_orders,
-    CAST((SELECT AVG(o.total_amount) FROM dbo.Orders AS o
-          WHERE o.zone_id = z.zone_id AND o.status <> 'Cancelled'
-        AND CAST(o.order_date AS date) BETWEEN @from_date AND @to_date)
-         AS decimal(10,2)) AS avg_order_total,
-    CAST(ISNULL((SELECT SUM(s.total_price) * 0.10
-             FROM dbo.Orders AS o
-             INNER JOIN dbo.SubOrder AS s ON s.order_id = o.order_id
-             WHERE o.zone_id = z.zone_id AND o.status <> 'Cancelled'
-               AND s.status <> 'Cancelled'
-               AND CAST(o.order_date AS date) BETWEEN @from_date AND @to_date), 0)
-         AS decimal(10,2)) AS platform_commission
-    FROM dbo.Zone AS z
-    WHERE z.zone_id = @zone_id AND @from_date <= @to_date
+SELECT s.order_id, c.customer_id, p.method,
+    CASE WHEN s.total_price + s.delivery_fee > p.amount - p.refunded_amount
+         THEN p.amount - p.refunded_amount
+         ELSE s.total_price + s.delivery_fee
+    END AS refund_amount
+FROM dbo.SubOrder s
+INNER JOIN dbo.Orders o ON o.order_id = s.order_id
+INNER JOIN dbo.Cart c ON c.cart_id = o.cart_id
+INNER JOIN dbo.Payment p ON p.order_id = o.order_id
+WHERE s.business_id = @business_id AND s.status IN ('Placed', 'Assigned')
 );
 GO
 
+-- 4.4.d - Suspend_Business
 -- mohamed mostafa hassan mohamed - 65-33784
-CREATE FUNCTION dbo.Daily_Revenue_Report (@report_date date)
+CREATE PROCEDURE dbo.Suspend_Business
+@business_id int, @admin_id int, @reason varchar(255)
+AS
+BEGIN
+    IF @business_id IS NULL OR @admin_id IS NULL OR @reason IS NULL OR @reason = ''
+        RETURN -1;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.Admin WHERE admin_id = @admin_id)
+        RETURN -3;
+
+    IF EXISTS (SELECT 1
+               FROM dbo.Admin a INNER JOIN dbo.Business b ON a.zone_id <> b.zone_id
+               WHERE a.admin_id = @admin_id AND a.role = 'Zone Admin'
+               AND b.business_id = @business_id)
+        RETURN -3;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.Business
+                   WHERE business_id = @business_id AND status = 'Active')
+        RETURN -4;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        UPDATE dbo.Customer
+        SET wallet_balance = wallet_balance +
+            (SELECT SUM(r.refund_amount) FROM dbo.BusinessRefunds(@business_id) r
+             WHERE r.customer_id = Customer.customer_id
+             AND r.method <> 'Cash')
+        WHERE customer_id IN (SELECT customer_id FROM dbo.BusinessRefunds(@business_id)
+                              WHERE method <> 'Cash');
+
+        UPDATE dbo.Payment
+        SET refunded_amount = refunded_amount +
+            (SELECT r.refund_amount FROM dbo.BusinessRefunds(@business_id) r
+             WHERE r.order_id = Payment.order_id)
+        WHERE order_id IN (SELECT order_id FROM dbo.BusinessRefunds(@business_id));
+
+        UPDATE dbo.SubOrder
+        SET status = 'Cancelled'
+        WHERE business_id = @business_id AND status IN ('Placed', 'Assigned');
+
+        UPDATE dbo.Orders
+        SET status = CASE
+            WHEN NOT EXISTS (SELECT 1 FROM dbo.SubOrder s
+                             WHERE s.order_id = Orders.order_id
+                             AND s.status <> 'Cancelled') THEN 'Cancelled'
+            WHEN NOT EXISTS (SELECT 1 FROM dbo.SubOrder s
+                             WHERE s.order_id = Orders.order_id
+                             AND s.status NOT IN ('Cancelled', 'Delivered')) THEN 'Delivered'
+            WHEN EXISTS (SELECT 1 FROM dbo.SubOrder s
+                         WHERE s.order_id = Orders.order_id
+                         AND s.status IN ('Picked Up', 'Delivered')) THEN 'In Progress'
+            ELSE 'Placed'
+        END
+        WHERE order_id IN (SELECT order_id FROM dbo.SubOrder
+                          WHERE business_id = @business_id AND status = 'Cancelled');
+
+        UPDATE dbo.Voucher
+        SET status = 'Unused'
+        WHERE voucher_id IN
+            (SELECT voucher_id FROM dbo.Orders
+             WHERE status = 'Cancelled'
+             AND order_id IN (SELECT order_id FROM dbo.SubOrder
+                          WHERE business_id = @business_id AND status = 'Cancelled'));
+
+        UPDATE dbo.Orders
+        SET voucher_id = NULL
+        WHERE status = 'Cancelled'
+        AND order_id IN (SELECT order_id FROM dbo.SubOrder
+                          WHERE business_id = @business_id AND status = 'Cancelled');
+
+        UPDATE dbo.Product
+        SET is_available = 0
+        WHERE business_id = @business_id;
+
+        UPDATE dbo.Business
+        SET status = 'Suspended', suspension_reason = @reason
+        WHERE business_id = @business_id;
+
+        COMMIT TRANSACTION;
+        RETURN 0;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        RETURN -1;
+    END CATCH
+END;
+GO
+
+-- 4.4.e - Reinstate_Business
+-- mohamed mostafa hassan mohamed - 65-33784
+CREATE PROCEDURE dbo.Reinstate_Business
+@business_id int, @super_admin_id int
+AS
+BEGIN
+    IF @business_id IS NULL OR @super_admin_id IS NULL
+        RETURN -1;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.Admin
+                   WHERE admin_id = @super_admin_id AND role = 'Super Admin')
+        RETURN -3;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.Business
+                   WHERE business_id = @business_id AND status = 'Suspended')
+        RETURN -4;
+
+    UPDATE dbo.Business
+    SET status = 'Active', suspension_reason = NULL
+    WHERE business_id = @business_id;
+    RETURN 0;
+END;
+GO
+
+-- 4.4.f - Create_Zone
+-- mohamed mostafa hassan mohamed - 65-33784
+CREATE PROCEDURE dbo.Create_Zone
+@zone_name varchar(50), @delivery_fee decimal(10,2), @super_admin_id int
+AS
+BEGIN
+    IF @zone_name IS NULL OR @zone_name = '' OR @delivery_fee IS NULL
+       OR @delivery_fee < 0 OR @super_admin_id IS NULL
+        RETURN -1;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.Admin
+                   WHERE admin_id = @super_admin_id AND role = 'Super Admin')
+        RETURN -3;
+
+    IF EXISTS (SELECT 1 FROM dbo.Zone WHERE zone_name = @zone_name)
+        RETURN -2;
+
+    INSERT INTO dbo.Zone (zone_name, delivery_fee)
+    VALUES (@zone_name, @delivery_fee);
+    RETURN 0;
+END;
+GO
+
+-- 4.4.g - Update_Zone_Fee
+-- mohamed mostafa hassan mohamed - 65-33784
+CREATE PROCEDURE dbo.Update_Zone_Fee
+@zone_id int, @new_fee decimal(10,2), @super_admin_id int
+AS
+BEGIN
+    IF @zone_id IS NULL OR @new_fee IS NULL OR @new_fee < 0 OR @super_admin_id IS NULL
+        RETURN -1;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.Admin
+                   WHERE admin_id = @super_admin_id AND role = 'Super Admin')
+        RETURN -3;
+
+    UPDATE dbo.Zone
+    SET delivery_fee = @new_fee
+    WHERE zone_id = @zone_id;
+    RETURN 0;
+END;
+GO
+
+-- 4.4.h - Assign_Admin_Zone (placeholder)
+
+-- 4.4.i - Issue_Voucher (placeholder)
+
+-- 4.4.j - Blacklist_Customer (placeholder)
+
+-- 4.4.k - Lift_Customer_Blacklist (placeholder)
+
+-- 4.4.l - ZoneOrderReport
+-- mohamed mostafa hassan mohamed - 65-33784
+CREATE FUNCTION dbo.ZoneOrderReport(@zone_id int, @from_date date, @to_date date)
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT z.zone_id, z.zone_name, COUNT(o.order_id) AS number_of_orders,
+           CAST(AVG(o.total_amount) AS decimal(10,2)) AS avg_order_total,
+           CAST(ISNULL((SELECT SUM(s.total_price) * 0.10
+                        FROM dbo.SubOrder s INNER JOIN dbo.Orders o2 ON o2.order_id = s.order_id
+                        WHERE o2.zone_id = z.zone_id AND o2.status <> 'Cancelled'
+                        AND s.status <> 'Cancelled'
+                        AND CAST(o2.order_date AS date) BETWEEN @from_date AND @to_date), 0)
+                AS decimal(10,2)) AS platform_commission
+    FROM dbo.Zone z
+    LEFT JOIN dbo.Orders o ON o.zone_id = z.zone_id AND o.status <> 'Cancelled'
+         AND CAST(o.order_date AS date) BETWEEN @from_date AND @to_date
+    WHERE z.zone_id = @zone_id AND @from_date <= @to_date
+    GROUP BY z.zone_id, z.zone_name
+);
+GO
+
+-- 4.4.m - TopRiders (placeholder)
+
+-- 4.4.n - Daily_Revenue_Report
+-- mohamed mostafa hassan mohamed - 65-33784
+CREATE FUNCTION dbo.Daily_Revenue_Report(@report_date date)
 RETURNS TABLE
 AS
 RETURN
 (
     SELECT z.zone_name, CAST('Restaurant' AS varchar(20)) AS business_type,
-    COUNT(*) AS number_of_suborders,
-    CAST(SUM(s.total_price) AS decimal(10,2)) AS gross_sales,
-    CAST(SUM(s.delivery_fee) AS decimal(10,2)) AS delivery_fees,
-    CAST(SUM(s.total_price) * 0.10 AS decimal(10,2)) AS platform_commission
-    FROM dbo.Orders AS o
-    INNER JOIN dbo.Zone AS z ON z.zone_id = o.zone_id
-    INNER JOIN dbo.SubOrder AS s ON s.order_id = o.order_id
-    INNER JOIN dbo.Restaurant AS r ON r.business_id = s.business_id
+           COUNT(*) AS number_of_suborders,
+           CAST(SUM(s.total_price) AS decimal(10,2)) AS gross_sales,
+           CAST(SUM(s.delivery_fee) AS decimal(10,2)) AS delivery_fees,
+           CAST(SUM(s.total_price) * 0.10 AS decimal(10,2)) AS platform_commission
+    FROM dbo.Orders o
+    INNER JOIN dbo.Zone z ON z.zone_id = o.zone_id
+    INNER JOIN dbo.SubOrder s ON s.order_id = o.order_id
+    INNER JOIN dbo.Restaurant r ON r.business_id = s.business_id
     WHERE CAST(o.order_date AS date) = @report_date AND s.status <> 'Cancelled'
     GROUP BY z.zone_id, z.zone_name
 
     UNION ALL
 
     SELECT z.zone_name, CAST('Pharmacy' AS varchar(20)), COUNT(*),
-    CAST(SUM(s.total_price) AS decimal(10,2)),
-    CAST(SUM(s.delivery_fee) AS decimal(10,2)),
-    CAST(SUM(s.total_price) * 0.10 AS decimal(10,2))
-    FROM dbo.Orders AS o
-    INNER JOIN dbo.Zone AS z ON z.zone_id = o.zone_id
-    INNER JOIN dbo.SubOrder AS s ON s.order_id = o.order_id
-    INNER JOIN dbo.Pharmacy AS p ON p.business_id = s.business_id
+           CAST(SUM(s.total_price) AS decimal(10,2)),
+           CAST(SUM(s.delivery_fee) AS decimal(10,2)),
+           CAST(SUM(s.total_price) * 0.10 AS decimal(10,2))
+    FROM dbo.Orders o
+    INNER JOIN dbo.Zone z ON z.zone_id = o.zone_id
+    INNER JOIN dbo.SubOrder s ON s.order_id = o.order_id
+    INNER JOIN dbo.Pharmacy p ON p.business_id = s.business_id
     WHERE CAST(o.order_date AS date) = @report_date AND s.status <> 'Cancelled'
     GROUP BY z.zone_id, z.zone_name
 );
 GO
 
+-- 4.5.a - Register_Business (placeholder)
+
+-- 4.5.b - Update_Business_Info (placeholder)
+
+-- 4.5.c - Upsert_Product (placeholder)
+
+-- 4.5.d - Toggle_Product_Status (placeholder)
+
+-- 4.5.e - Set_Product_Promotion (placeholder)
+
+-- 4.5.f - BusinessSalesReport (placeholder)
+
+-- 4.5.g - BusinessFeedbackOverview (placeholder)
+
+-- 4.6.a - Add_Customer_Address (placeholder)
 --yehia tamer mohamed 64-1694
 GO
 CREATE PROCEDURE Add_Customer_Address 
@@ -1081,6 +798,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.b - Update_Delete_Customer_Address (placeholder)
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Update_Delete_Customer_Address 
 @customer_id INT, @address_id INT, @description VARCHAR(150), @zone_id INT, @action VARCHAR(20)
@@ -1141,6 +859,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.c - Change_Active_Address (placeholder)
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Change_Active_Address
 @customer_id INT, @new_address_id INT
@@ -1171,6 +890,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.d - Add_Card (placeholder)
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Add_Card
 @customer_id INT, @card_no CHAR(16), @card_holder_name VARCHAR(100), @expiration_date DATE
@@ -1179,7 +899,7 @@ AS BEGIN
         RETURN -1;
     ELSE IF LEN(@card_no)<>16 OR @card_no LIKE '%[^0-9]%' --contains anything thats not a digit
         RETURN -1;
-    ELSE IF @expiration_date<CURRENT_DATE
+    ELSE IF @expiration_date<CAST(GETDATE() AS DATE)
         RETURN -1;
     ELSE IF EXISTS (SELECT * FROM Card WHERE customer_id=@customer_id AND card_no=@card_no)
         RETURN -2;
@@ -1197,6 +917,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.e - Create_Cart (placeholder)
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Create_Cart 
 @customer_id INT
@@ -1227,6 +948,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.f - Add_To_Cart (placeholder)
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Add_To_Cart
 @cart_id INT, @product_id INT, @quantity INT, @notes VARCHAR(255)
@@ -1295,6 +1017,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.g - Remove_From_Cart (placeholder)
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Remove_From_Cart
 @cart_id INT, @product_id INT
@@ -1322,6 +1045,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.h - Calculate_Voucher_Discount (placeholder)
 --yehia tamer mohamed 64-1694
 CREATE FUNCTION dbo.Calculate_Voucher_Discount (@voucher_id INT,@order_subtotal DECIMAL(10,2))
 RETURNS DECIMAL(10,2)
@@ -1343,7 +1067,7 @@ AS BEGIN
     SELECT @is_percentage=is_percentage,@status=status,@expiry_date=expiry_date,@discount_amount=amount FROM Voucher
     WHERE voucher_id=@voucher_id
 
-    IF @status='Used' OR @expiry_date<CURRENT_DATE
+    IF @status='Used' OR @expiry_date<CAST(GETDATE() AS DATE)
         RETURN 0.0;
 
     IF @is_percentage=1
@@ -1356,21 +1080,257 @@ AS BEGIN
     RETURN @amount;
 END
 GO
-
+-- 4.6.i - Checkout_Cart (placeholder)
 --yehia tamer mohamed 64-1694
-CREATE FUNCTION My_Order_History (@customer_id INT)
-RETURNS TABLE
-AS RETURN(
-    SELECT o.order_id, o.order_date, z.zone_name, o.status, COUNT(s.suborder_id) number_of_suborders, o.discount_amount,o.total_amount, p.method payment_method, p.refunded_amount
-    FROM Orders o INNER JOIN Zone z ON z.zone_id=o.zone_id
-    INNER JOIN SubOrder s ON s.order_id=o.order_id
-    LEFT OUTER JOIN  Payment p on p.order_id=o.order_id
-    INNER JOIN Cart c on c.cart_id=o.cart_id
-    WHERE c.customer_id=@customer_id
-    GROUP BY o.order_id, o.order_date, z.zone_name, o.status, o.discount_amount,o.total_amount, p.method, p.refunded_amount
-);
-GO
+CREATE PROCEDURE Checkout_Cart
+@cart_id INT, @voucher_id INT, @payment_method VARCHAR(20), @card_id INT
+AS BEGIN
+    IF @cart_id IS NULL OR @payment_method IS NULL
+        RETURN -1;
+
+    IF NOT EXISTS(SELECT * FROM Cart WHERE cart_id=@cart_id)
+    OR @payment_method NOT IN ('Cash','Card','Wallet')
+        RETURN -1;
+
+    IF @card_id IS NOT NULL
+        BEGIN
+            IF NOT EXISTS(SELECT * FROM Card WHERE card_id=@card_id)
+                RETURN -1;
+        END
     
+    IF (SELECT status FROM Cart WHERE cart_id=@cart_id)<>'Active'
+        RETURN -4;
+
+    IF NOT EXISTS(
+        SELECT * FROM CartItem ca 
+        INNER JOIN Cart c ON c.cart_id=ca.cart_id AND c.cart_id=@cart_id
+    )
+        RETURN -9;
+
+    DECLARE @customer_id INT,@address_id INT,@zone_id INT,@delivery_fee DECIMAL(10,2),@now TIME = CAST(CURRENT_TIMESTAMP AS TIME);
+
+    SELECT @customer_id=customer_id,@address_id=address_id FROM Cart WHERE cart_id=@cart_id;
+
+    SELECT @zone_id=a.zone_id,@delivery_fee=z.delivery_fee FROM Address a
+    INNER JOIN Zone z ON z.zone_id=a.zone_id
+    WHERE a.address_id=@address_id;
+
+    IF (SELECT account_status FROM Users u INNER JOIN Customer c ON c.customer_id=u.user_id AND c.customer_id=@customer_id)='Blacklisted'
+        RETURN -3;
+
+    IF (SELECT is_active FROM Address WHERE address_id=@address_id)<>1
+        RETURN -4;
+
+    IF EXISTS(
+        SELECT * FROM CartItem ca 
+        INNER JOIN Product p ON p.product_id=ca.product_id
+        INNER JOIN Business b ON p.business_id=b.business_id
+        WHERE cart_id=@cart_id AND (p.is_available=0 OR b.status<>'Active')
+    )
+        RETURN -4;
+
+    IF (
+        SELECT a.zone_id FROM Address a
+        INNER JOIN Zone z ON z.zone_id=a.zone_id
+        WHERE a.address_id=@address_id
+    )
+    <>
+    SOME (
+        SELECT b.zone_id FROM Business b
+        INNER JOIN Product p ON b.business_id=p.business_id
+        INNER JOIN CartItem ca ON ca.product_id=p.product_id
+        WHERE ca.cart_id=@cart_id
+    )
+        RETURN -5;
+
+    IF EXISTS (
+        SELECT * FROM CartItem ca 
+        INNER JOIN Product p ON p.product_id=ca.product_id AND ca.cart_id=@cart_id
+        INNER JOIN Business b on b.business_id=p.business_id
+        WHERE NOT(
+            b.opening_hour=b.closing_hour 
+            OR (@now>=b.opening_hour AND @now<b.closing_hour) 
+            OR (b.opening_hour>b.closing_hour AND (@now>=b.opening_hour OR @now<b.closing_hour))
+        )
+    )
+            RETURN -4;
+
+    IF @voucher_id IS NOT NULL
+        BEGIN
+            IF NOT EXISTS(SELECT * FROM Voucher WHERE voucher_id=@voucher_id)
+                RETURN -1;
+
+            IF (SELECT status FROM Voucher WHERE voucher_id=@voucher_id)<>'Unused'
+                RETURN -4;
+
+            IF (SELECT customer_id FROM Voucher WHERE voucher_id=@voucher_id)<>@customer_id
+                RETURN -3;
+
+            IF (SELECT expiry_date FROM Voucher WHERE voucher_id=@voucher_id)<CAST(GETDATE() AS DATE)
+                RETURN -1;
+        END
+
+    DECLARE @subtotal DECIMAL(10,2),@fees DECIMAL(10,2),@discount DECIMAL(10,2),@total DECIMAL(10,2),@business_count INT;
+
+    SELECT @subtotal=SUM(ca.quantity * (p.price-p.discount_amount)),@business_count=COUNT(DISTINCT b.business_id) FROM CartItem ca
+    INNER JOIN Product p ON p.product_id=ca.product_id
+    INNER JOIN Business b ON p.business_id=b.business_id
+    WHERE ca.cart_id=@cart_id;
+
+    SELECT @fees=@business_count*@delivery_fee,@discount=dbo.Calculate_Voucher_Discount(@voucher_id,@subtotal);
+     
+    SELECT @total=@subtotal + @fees - @discount;
+
+    IF @payment_method='Card'
+        BEGIN
+            IF @card_id IS NULL 
+            OR (SELECT expiration_date FROM Card WHERE card_id=@card_id)<CAST(GETDATE() AS DATE) 
+            OR (SELECT customer_id FROM Card WHERE card_id=@card_id)<>@customer_id
+                RETURN -7;
+        END
+   
+   IF @payment_method='Wallet'
+       BEGIN
+           IF (SELECT wallet_balance FROM Customer WHERE customer_id=@customer_id)<@total  
+               RETURN -7;
+       END
+
+   IF NOT EXISTS (
+       SELECT * FROM Rider r
+       INNER JOIN Users u ON r.rider_id=u.user_id
+       WHERE r.zone_id=@zone_id AND r.is_available=1 AND u.account_status='Active'
+   )
+       RETURN -8;
+   
+   DECLARE @order_id INT, @suborder_id INT, @rider_id INT;
+
+   BEGIN TRY
+       BEGIN TRANSACTION
+            UPDATE ca
+            SET ca.unit_price=p.price-p.discount_amount
+            FROM CartItem ca
+            INNER JOIN Product p ON ca.product_id=p.product_id
+            WHERE ca.cart_id=@cart_id;
+
+            INSERT INTO Orders (order_date,discount_amount,total_amount,cart_id,zone_id,voucher_id) VALUES
+            (GETDATE(),@discount,@total,@cart_id,@zone_id,@voucher_id);
+
+            SET @order_id=SCOPE_IDENTITY();
+
+            INSERT INTO SubOrder (total_price,delivery_fee,order_id,business_id)
+            SELECT SUM(ca.quantity*ca.unit_price),@delivery_fee,@order_id,b.business_id FROM CartItem ca
+            INNER JOIN Product p ON ca.product_id=p.product_id
+            INNER JOIN Business b ON b.business_id=p.business_id
+            WHERE ca.cart_id=@cart_id
+            GROUP BY b.business_id
+
+            WHILE EXISTS(SELECT * FROM SubOrder WHERE order_id=@order_id AND status='Placed')
+                BEGIN
+                    SELECT @suborder_id=MIN(suborder_id) FROM SubOrder WHERE order_id=@order_id AND status='Placed';
+
+                    SELECT TOP 1 @rider_id=r.rider_id FROM Rider r
+                    INNER JOIN Users u ON u.user_id=r.rider_id
+                    LEFT OUTER JOIN Delivery d ON d.rider_id=r.rider_id
+                    LEFT OUTER JOIN SubOrder s ON s.suborder_id=d.suborder_id AND s.status IN ('Assigned','Picked Up')
+                    WHERE r.is_available=1 AND u.account_status='Active' AND r.zone_id=@zone_id
+                    GROUP BY r.rider_id
+                    ORDER BY COUNT(s.suborder_id),r.rider_id;
+
+                    INSERT INTO Delivery (assigned_at,suborder_id,rider_id) VALUES
+                    (GETDATE(),@suborder_id,@rider_id);
+
+                    UPDATE SubOrder SET status='Assigned' WHERE suborder_id=@suborder_id;
+                END
+
+            IF @voucher_id IS NOT NULL
+                UPDATE Voucher SET status='Used' WHERE voucher_id=@voucher_id;
+
+            IF @payment_method<>'Card'
+                SET @card_id = NULL;
+
+            INSERT INTO Payment (amount,method,transaction_date,order_id,card_id) VALUES
+            (@total,@payment_method,GETDATE(),@order_id,@card_id);
+
+            IF @payment_method='Wallet'
+                UPDATE Customer SET wallet_balance=wallet_balance-@total WHERE customer_id=@customer_id;
+
+            UPDATE Cart SET status='Checked Out' WHERE cart_id=@cart_id;
+
+        COMMIT TRANSACTION;
+        RETURN 0;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT>0
+            ROLLBACK TRANSACTION;
+        RETURN -1;
+    END CATCH
+END
+GO
+
+-- 4.6.j - Cancel_Order (placeholder)
+--yehia tamer mohamed 64-1694
+CREATE PROCEDURE Cancel_Order 
+@order_id INT
+AS BEGIN
+
+    IF @order_id IS NULL
+        RETURN -1;
+
+    IF NOT EXISTS(SELECT * FROM Orders WHERE order_id=@order_id)
+        RETURN -1;
+
+    IF (SELECT status FROM Orders WHERE order_id=@order_id) = 'Cancelled'
+        RETURN -4;
+
+    IF EXISTS(
+        SELECT * FROM Orders o
+        INNER JOIN SubOrder s on o.order_id=s.order_id
+        WHERE s.status IN ('Delivered','Picked Up') AND o.order_id=@order_id
+    )
+        RETURN -4;
+
+    BEGIN TRANSACTION;
+
+        DECLARE @payment_id INT, @voucher_id INT,@remaining_amount DECIMAL(10,2),@customer_id INT,@method VARCHAR(20);
+
+        SELECT @voucher_id=voucher_id FROM Orders WHERE order_id=@order_id
+            
+        SELECT @payment_id=p.payment_id,@remaining_amount=p.amount-p.refunded_amount,@method=p.method,@customer_id=c.customer_id FROM Payment p
+        INNER JOIN Orders o ON o.order_id=p.order_id
+        INNER JOIN Cart c on c.cart_id=o.cart_id
+        WHERE p.order_id=@order_id;
+
+        IF @voucher_id IS NOT NULL
+            BEGIN
+                BEGIN TRY
+                    UPDATE Voucher SET status='Unused' WHERE voucher_id=@voucher_id;
+                END TRY
+                BEGIN CATCH
+                     IF @@TRANCOUNT>0
+                         ROLLBACK TRANSACTION;
+                     RETURN -1;
+                END CATCH
+            END
+                
+        BEGIN TRY
+            UPDATE Orders SET voucher_id=NULL,status='Cancelled' WHERE order_id=@order_id;
+            UPDATE Payment SET refunded_amount=refunded_amount+@remaining_amount WHERE payment_id=@payment_id;
+            UPDATE SubOrder SET status='Cancelled' WHERE order_id=@order_id;
+            
+            IF @method<>'Cash'
+                UPDATE Customer SET wallet_balance=wallet_balance+@remaining_amount WHERE customer_id=@customer_id;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT>0
+                ROLLBACK TRANSACTION;
+            RETURN -1;
+        END CATCH
+    COMMIT TRANSACTION;
+    RETURN 0;
+END
+GO
+
+-- 4.6.k - Reorder (placeholder)
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Reorder
 @order_id INT,@address_id INT
@@ -1448,11 +1408,104 @@ AS BEGIN
 END
 GO
 
-                    
+-- 4.6.l - Submit_Feedback (placeholder)
 
+-- 4.6.m - Rate_Rider (placeholder)
 
-                    
+-- 4.6.n - My_Order_History (placeholder)
+--yehia tamer mohamed 64-1694
+CREATE FUNCTION My_Order_History (@customer_id INT)
+RETURNS TABLE
+AS RETURN(
+    SELECT o.order_id, o.order_date, z.zone_name, o.status, COUNT(s.suborder_id) number_of_suborders, o.discount_amount,o.total_amount, p.method payment_method, p.refunded_amount
+    FROM Orders o INNER JOIN Zone z ON z.zone_id=o.zone_id
+    INNER JOIN SubOrder s ON s.order_id=o.order_id
+    LEFT OUTER JOIN  Payment p on p.order_id=o.order_id
+    INNER JOIN Cart c on c.cart_id=o.cart_id
+    WHERE c.customer_id=@customer_id
+    GROUP BY o.order_id, o.order_date, z.zone_name, o.status, o.discount_amount,o.total_amount, p.method, p.refunded_amount
+);
+GO
 
+-- 4.6.o - Toggle_Favorite (placeholder)
 
+-- 4.6.p - My_Favorites (placeholder)
 
+-- 4.6.q - Recommended_Products (placeholder)
 
+-- 4.7.a - Set_Rider_Availability
+-- Maryam Mustafa AbdelWahab - 64-3003
+GO
+CREATE PROC dbo.Set_Rider_Availability
+@rider_id INT,
+@is_available BIT
+AS
+BEGIN 
+ IF @rider_id IS NULL OR @is_available IS NULL
+  RETURN -1;
+  IF NOT EXISTS (SELECT 1 FROM dbo.Rider WHERE rider_id = @rider_id)
+   RETURN -3;
+  BEGIN TRY
+        UPDATE dbo.Rider
+        SET is_available = @is_available
+        WHERE rider_id = @rider_id;
+        RETURN 0;
+  END TRY
+  BEGIN CATCH 
+  RETURN -1;
+  END CATCH;
+END;
+GO
+
+-- 4.7.b - My_Active_Deliveries
+-- Maryam Mustafa AbdelWahab - 64-3003 
+CREATE FUNCTION dbo.My_Active_Deliveries(@rider_int int)
+RETURNS TABLE
+AS
+RETURN ( SELECT d.delivery_id , s.order_id , s.suborder_id , b.name as business_name , 
+u.first_name + ' ' + u.last_name as customer_name , a.description AS address_description , 
+z.zone_name , s.status , d.assigned_at
+FROM dbo.Delivery d 
+
+INNER JOIN dbo.SubOrder AS s ON s.suborder_id=d.suborder_id
+INNER JOIN dbo.Business AS b on b.business_id=s.business_id
+INNER JOIN dbo.Orders AS o ON o.order_id=s.order_id
+INNER JOIN dbo.Zone AS z ON z.zone_id=o.zone_id
+INNER JOIN dbo.Cart AS  c ON c.Cart_id = o.cart_id
+INNER JOIN dbo.Address AS a ON a.address_id= c.address_id
+INNER JOIN dbo.UsersAS u ON u.user_id=c.customer_id
+WHERE d.rider_id=@rider_int AND s.status IN ('Assigned', 'Picked Up'));
+GO
+
+-- 4.7.c - Mark_Picked_Up (placeholder)
+
+-- 4.7.d - Mark_Delivered (placeholder)
+
+-- 4.7.e - My_Earnings (placeholder)
+
+-- 4.7.f - My_Rating_Summary (placeholder)
+
+-- 4.7.g - My_Delivery_History
+-- Maryam Mustafa Abdelwahab - 64-3003
+CREATE FUNCTION dbo.My_Delivery_History(@rider_id int , @from_date date , @to_date date)
+RETURNS TABLE
+AS
+RETURN 
+( SELECT d.Delivery_id , s.order_id , b.name AS business_name , s.status , d.assigned_at , 
+d.picked_up_at , d.delivered_at , d.tracking_time FROM dbo.Delivery as d 
+
+INNER JOIN dbo.SubOrder AS s ON s.suborder_id= d.suborder_id
+    INNER JOIN dbo.Business as b on b.business_id= s.business_id
+    WHERE d.rider_id=@rider_id AND s.status IN ('Delivered', 'Cancelled') 
+    AND CAST(d.assigned_at AS date) BETWEEN @from_date AND @to_date);
+    GO
+
+-- 4.8.a - Search_Platform (placeholder)
+
+-- 4.8.b - Reconcile_Order_Totals (placeholder)
+
+-- 4.8.c - Nearby_Businesses_By_Category (placeholder)
+
+-- 4.8.d - Platform_Health_Snapshot (placeholder)
+
+   
