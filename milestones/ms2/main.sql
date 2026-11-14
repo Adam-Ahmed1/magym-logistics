@@ -433,8 +433,8 @@ GROUP BY z.zone_id, z.zone_name;
 GO
 
 -- 4.2.c - BusinessRatingsSummary
---Maryam Mustafa Abdelwahab- 64-3003
 GO
+--Maryam Mustafa Abdelwahab- 64-3003
 CREATE VIEW dbo.BusinessRatingsSummary
 AS
 SELECT b.business_id, b.name AS business_name,
@@ -763,9 +763,9 @@ GO
 
 -- 4.5.g - BusinessFeedbackOverview (placeholder)
 
--- 4.6.a - Add_Customer_Address (placeholder)
---yehia tamer mohamed 64-1694
+-- 4.6.a - Add_Customer_Address
 GO
+--yehia tamer mohamed 64-1694
 CREATE PROCEDURE Add_Customer_Address 
 @customer_id INT, @description VARCHAR(150), @zone_id INT
 AS BEGIN
@@ -798,7 +798,7 @@ AS BEGIN
 END
 GO
 
--- 4.6.b - Update_Delete_Customer_Address (placeholder)
+-- 4.6.b - Update_Delete_Customer_Address
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Update_Delete_Customer_Address 
 @customer_id INT, @address_id INT, @description VARCHAR(150), @zone_id INT, @action VARCHAR(20)
@@ -859,7 +859,7 @@ AS BEGIN
 END
 GO
 
--- 4.6.c - Change_Active_Address (placeholder)
+-- 4.6.c - Change_Active_Address
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Change_Active_Address
 @customer_id INT, @new_address_id INT
@@ -890,7 +890,7 @@ AS BEGIN
 END
 GO
 
--- 4.6.d - Add_Card (placeholder)
+-- 4.6.d - Add_Card
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Add_Card
 @customer_id INT, @card_no CHAR(16), @card_holder_name VARCHAR(100), @expiration_date DATE
@@ -917,7 +917,7 @@ AS BEGIN
 END
 GO
 
--- 4.6.e - Create_Cart (placeholder)
+-- 4.6.e - Create_Cart
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Create_Cart 
 @customer_id INT
@@ -948,7 +948,7 @@ AS BEGIN
 END
 GO
 
--- 4.6.f - Add_To_Cart (placeholder)
+-- 4.6.f - Add_To_Cart
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Add_To_Cart
 @cart_id INT, @product_id INT, @quantity INT, @notes VARCHAR(255)
@@ -1017,7 +1017,7 @@ AS BEGIN
 END
 GO
 
--- 4.6.g - Remove_From_Cart (placeholder)
+-- 4.6.g - Remove_From_Cart
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Remove_From_Cart
 @cart_id INT, @product_id INT
@@ -1045,7 +1045,7 @@ AS BEGIN
 END
 GO
 
--- 4.6.h - Calculate_Voucher_Discount (placeholder)
+-- 4.6.h - Calculate_Voucher_Discount
 --yehia tamer mohamed 64-1694
 CREATE FUNCTION dbo.Calculate_Voucher_Discount (@voucher_id INT,@order_subtotal DECIMAL(10,2))
 RETURNS DECIMAL(10,2)
@@ -1080,7 +1080,7 @@ AS BEGIN
     RETURN @amount;
 END
 GO
--- 4.6.i - Checkout_Cart (placeholder)
+-- 4.6.i - Checkout_Cart
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Checkout_Cart
 @cart_id INT, @voucher_id INT, @payment_method VARCHAR(20), @card_id INT
@@ -1267,7 +1267,7 @@ AS BEGIN
 END
 GO
 
--- 4.6.j - Cancel_Order (placeholder)
+-- 4.6.j - Cancel_Order
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Cancel_Order 
 @order_id INT
@@ -1330,7 +1330,7 @@ AS BEGIN
 END
 GO
 
--- 4.6.k - Reorder (placeholder)
+-- 4.6.k - Reorder
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Reorder
 @order_id INT,@address_id INT
@@ -1407,31 +1407,12 @@ AS BEGIN
      END
 END
 GO
--- 4.6.b - Update_Delete_Customer_Address (placeholder)
-
--- 4.6.c - Change_Active_Address (placeholder)
-
--- 4.6.d - Add_Card (placeholder)
-
--- 4.6.e - Create_Cart (placeholder)
-
--- 4.6.f - Add_To_Cart (placeholder)
-
--- 4.6.g - Remove_From_Cart (placeholder)
-
--- 4.6.h - Calculate_Voucher_Discount (placeholder)
-
--- 4.6.i - Checkout_Cart (placeholder)
-
--- 4.6.j - Cancel_Order (placeholder)
-
--- 4.6.k - Reorder (placeholder)
 
 -- 4.6.l - Submit_Feedback (placeholder)
 
 -- 4.6.m - Rate_Rider (placeholder)
 
--- 4.6.n - My_Order_History (placeholder)
+-- 4.6.n - My_Order_History
 --yehia tamer mohamed 64-1694
 CREATE FUNCTION My_Order_History (@customer_id INT)
 RETURNS TABLE
@@ -1454,8 +1435,8 @@ GO
 -- 4.6.q - Recommended_Products (placeholder)
 
 -- 4.7.a - Set_Rider_Availability
--- Maryam Mustafa AbdelWahab - 64-3003
 GO
+-- Maryam Mustafa AbdelWahab - 64-3003
 CREATE PROC dbo.Set_Rider_Availability
 @rider_id INT,
 @is_available BIT
@@ -1527,5 +1508,3 @@ INNER JOIN dbo.SubOrder AS s ON s.suborder_id= d.suborder_id
 -- 4.8.c - Nearby_Businesses_By_Category (placeholder)
 
 -- 4.8.d - Platform_Health_Snapshot (placeholder)
-
-
