@@ -955,8 +955,61 @@ BEGIN
 END
 GO
 
--- 4.5.b - Update_Business_Info (placeholder)
+-- 4.5.b - Update_Business_Info
+-- Adam Ahmed Ibrahim - 65-33775
+GO
+CREATE PROCEDURE dbo.Update_Business_Info
+    @business_id INT,
+    @opening_hour TIME,
+    @closing_hour TIME,
+    @phone CHAR(11),
+    @link_website VARCHAR(255)
+AS
+BEGIN
+    IF @business_id IS NULL
+        OR @opening_hour IS NULL
+        OR @closing_hour IS NULL
+        OR @phone IS NULL
+        OR LEN(@phone) <> 11
+        OR @phone LIKE '%[^0-9]%'
+    RETURN -1;
 
+    IF NOT EXISTS (
+        SELECT 1
+        FROM Business
+        WHERE business_id = @business_id
+    )
+    RETURN -1;
+
+    IF EXISTS (
+        SELECT 1
+        FROM Business_Phone BP
+        WHERE BP.business_id = @business_id
+            AND BP.phone = @phone
+    )
+    RETURN -2;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+            UPDATE Business
+            SET opening_hour = @opening_hour,
+                closing_hour = @closing_hour,
+                link_website = @link_website
+            WHERE business_id = @business_id;
+
+            INSERT INTO Business_Phone (business_id, phone)
+            VALUES (@business_id, @phone)
+
+        COMMIT TRANSACTION;
+        RETURN 0;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        RETURN -1;
+    END CATCH;
+END
+GO
 -- 4.5.c - Upsert_Product (placeholder)
 
 -- 4.5.d - Toggle_Product_Status (placeholder)
