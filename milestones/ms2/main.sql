@@ -1156,7 +1156,42 @@ BEGIN
 END
 GO
 
--- 4.5.e - Set_Product_Promotion (placeholder)
+-- 4.5.e - Set_Product_Promotion
+-- Adam Ahmed Ibrahim - 65-33775
+GO
+CREATE PROCEDURE dbo.Set_Product_Promotion
+    @product_id INT,
+    @discount_amount DECIMAL(10,2)
+AS
+BEGIN
+    IF @product_id IS NULL
+        OR @discount_amount IS NULL
+        OR @discount_amount < 0
+    RETURN -1;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM [Product]
+        WHERE product_id = @product_id
+    )
+    RETURN -1;
+
+    -- Invalid discount amount
+    IF EXISTS (
+        SELECT 1
+        FROM [Product]
+        WHERE product_id = @product_id
+            AND @discount_amount > 0.5 * price
+    )
+    RETURN -1;
+
+    UPDATE [Product]
+    SET discount_amount = @discount_amount
+    WHERE product_id = @product_id;
+
+    RETURN 0;
+END
+GO
 
 -- 4.5.f - BusinessSalesReport (placeholder)
 
