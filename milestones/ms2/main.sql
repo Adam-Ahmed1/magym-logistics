@@ -790,7 +790,170 @@ RETURN
 );
 GO
 
--- 4.5.a - Register_Business (placeholder)
+-- 4.5.a - Register_Business
+-- Adam Ahmed Ibrahim - 65-33775
+GO
+CREATE PROCEDURE dbo.Register_Business
+    @partner_id INT,
+    @name VARCHAR(100),
+    @description VARCHAR(255),
+    @link_website VARCHAR(255),
+    @zone_id INT,
+    @opening_hour TIME,
+    @closing_hour TIME,
+    @expected_delivery_time INT,
+    @phone CHAR(11),
+    @business_type VARCHAR(20),
+    @cuisine_type VARCHAR(50),
+    @food_category VARCHAR(50),
+    @pharmacy_type VARCHAR(50)
+AS
+BEGIN
+    IF @name IS NULL
+        OR @opening_hour IS NULL
+        OR @closing_hour IS NULL
+        OR @expected_delivery_time IS NULL
+        OR @expected_delivery_time <= 0
+        OR @partner_id IS NULL
+        OR @zone_id IS NULL
+        OR @phone IS NULL
+        OR LEN(@phone) <> 11
+        OR @phone LIKE '%[^0-9]%'
+        OR @business_type IS NULL
+        OR @business_type NOT IN ('Restaurant', 'Pharmacy')
+    RETURN -1;
+
+    IF @business_type = 'Restaurant'
+        AND (@cuisine_type IS NULL OR @food_category IS NULL)
+    RETURN -1;
+
+    IF @business_type = 'Pharmacy'
+        AND (@pharmacy_type IS NULL)
+    RETURN -1;
+
+    DECLARE @business_id INT;
+
+    SELECT @business_id = B.business_id
+    FROM Business B
+    WHERE B.partner_id = @partner_id;
+
+    -- If this partner registered before
+    IF @business_id IS NOT NULL
+    BEGIN
+        -- They already have a business
+        IF EXISTS (
+            SELECT 1
+            FROM Business B
+            WHERE B.business_id = @business_id
+                AND B.[status] IN ('Active', 'Pending', 'Suspended')
+        )
+        RETURN -2;
+
+        -- They registered before but the business was rejected
+        -- Updating business info
+        BEGIN TRY
+            BEGIN TRANSACTION
+                UPDATE dbo.Business
+                SET [name] = @name,
+                    [description] = @description,
+                    link_website = @link_website,
+                    opening_hour = @opening_hour,
+                    closing_hour = @closing_hour,
+                    expected_delivery_time = @expected_delivery_time,
+                    [status] = 'Pending',
+                    suspension_reason = NULL,
+                    zone_id = @zone_id
+                WHERE business_id = @business_id;
+
+                -- Updating phone number
+                DELETE FROM dbo.Business_Phone
+                WHERE business_id = @business_id;
+
+                INSERT INTO dbo.Business_Phone (business_id, phone)
+                VALUES (@business_id, @phone);
+
+                -- Updating business type
+                DELETE FROM dbo.Restaurant
+                WHERE business_id = @business_id;
+
+                DELETE FROM dbo.Pharmacy
+                WHERE business_id = @business_id;
+
+                IF @business_type = 'Restaurant'
+                BEGIN
+                    INSERT INTO dbo.Restaurant (business_id, cuisine_type, food_category)
+                    VALUES (@business_id, @cuisine_type, @food_category);
+                END
+                ELSE
+                BEGIN
+                    INSERT INTO dbo.Pharmacy (business_id, pharmacy_type)
+                    VALUES (@business_id, @pharmacy_type);
+                END
+            COMMIT TRANSACTION
+            RETURN 0;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0
+            BEGIN
+                ROLLBACK TRANSACTION;
+            END
+            RETURN -1;
+        END CATCH
+    END
+
+    BEGIN TRY
+        BEGIN TRANSACTION
+            INSERT INTO dbo.Business (
+            [name],
+            [description],
+            link_website,
+            opening_hour,
+            closing_hour,
+            expected_delivery_time,
+            partner_id,
+            zone_id
+            )
+            VALUES (
+                @name,
+                @description,
+                @link_website,
+                @opening_hour,
+                @closing_hour,
+                @expected_delivery_time,
+                @partner_id,
+                @zone_id
+            );
+
+            SELECT @business_id = B.business_id
+            FROM dbo.Business B
+            WHERE B.partner_id = @partner_id;
+
+            INSERT INTO dbo.Business_Phone (business_id, phone)
+            VALUES (@business_id, @phone);
+
+            IF @business_type = 'Restaurant'
+            BEGIN
+                INSERT INTO dbo.Restaurant (business_id, cuisine_type, food_category)
+                VALUES (@business_id, @cuisine_type, @food_category);
+            END
+            ELSE
+            BEGIN
+                INSERT INTO dbo.Pharmacy (business_id, pharmacy_type)
+                VALUES (@business_id, @pharmacy_type);
+            END
+
+        COMMIT TRANSACTION;
+        RETURN 0;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+        BEGIN
+            ROLLBACK TRANSACTION;
+        END
+        RETURN -1;
+    END CATCH
+END
+GO
 
 -- 4.5.b - Update_Business_Info (placeholder)
 
