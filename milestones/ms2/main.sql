@@ -1501,7 +1501,52 @@ INNER JOIN dbo.SubOrder AS s ON s.suborder_id= d.suborder_id
     AND CAST(d.assigned_at AS date) BETWEEN @from_date AND @to_date);
     GO
 
--- 4.8.a - Search_Platform (placeholder)
+-- Helper
+CREATE FUNCTION dbo.Search_Platform_Helper(@business_name VARCHAR(100), @keyword VARCHAR(100))
+RETURNS INT
+AS
+BEGIN
+    IF @business_name = @keyword
+    BEGIN
+        RETURN 1;
+    END
+
+    IF @business_name LIKE (@keyword + '%')
+    BEGIN
+        RETURN 2;
+    END
+
+    IF @business_name LIKE ('%' + @keyword + '%')
+    BEGIN
+        RETURN 3;
+    END
+
+    RETURN 4;
+
+END
+GO
+
+-- 4.8.a - Search_Platform
+GO
+CREATE FUNCTION dbo.Search_Platform(@customer_id INT, @keyword VARCHAR(100))
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT
+        B.business_id,
+        B.[name] AS business_name,
+        dbo.Search_Platform_Helper(B.[name], @keyword) AS [priority]
+    FROM Customer C
+    INNER JOIN [Address] A ON A.customer_id = C.customer_id AND A.is_active = 1
+    INNER JOIN Business B ON B.zone_id = A.zone_id AND B.[status] = 'Active'
+    WHERE C.customer_id = @customer_id
+        AND dbo.Search_Platform_Helper(B.[name], @keyword) BETWEEN 1 AND 3
+    ORDER BY [priority] ASC
+    OFFSET 0 ROWS -- To allow ORDER BY inside a tvf
+);
+GO
+
 
 -- 4.8.b - Reconcile_Order_Totals (placeholder)
 
