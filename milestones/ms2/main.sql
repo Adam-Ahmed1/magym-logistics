@@ -1010,7 +1010,113 @@ BEGIN
     END CATCH;
 END
 GO
--- 4.5.c - Upsert_Product (placeholder)
+
+-- 4.5.c - Upsert_Product
+-- Adam Ahmed Ibrahim - 65-33775
+GO
+CREATE PROCEDURE dbo.Upsert_Product
+    @business_id INT,
+    @product_id INT,
+    @name VARCHAR(100),
+    @description VARCHAR(255),
+    @category VARCHAR(50),
+    @price DECIMAL(10,2),
+    @is_available BIT
+AS
+BEGIN
+    IF @business_id IS NULL
+        OR @name IS NULL
+        OR @category IS NULL
+        OR @price IS NULL
+        OR @price <= 0
+        OR @is_available IS NULL
+    RETURN -1;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM Business
+        WHERE business_id = @business_id
+    )
+    RETURN -1;
+
+    IF EXISTS (
+        SELECT 1
+        FROM Business
+        WHERE business_id = @business_id
+            AND [status] = 'Suspended'
+    )
+    RETURN -4;
+
+    IF @product_id IS NULL
+    BEGIN
+        BEGIN TRY
+            INSERT INTO dbo.[Product] (
+                [name],
+                [description],
+                category,
+                price,
+                is_available,
+                business_id
+            )
+            VALUES (
+                @name,
+                @description,
+                @category,
+                @price,
+                @is_available,
+                @business_id
+            );
+        END TRY
+        BEGIN CATCH
+            RETURN -1;
+        END CATCH;
+    END
+    ELSE
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1
+            FROM [Product]
+            WHERE product_id = @product_id
+        )
+        RETURN -1;
+
+        -- Owned by another business
+        IF EXISTS (
+            SELECT 1
+            FROM [Product]
+            WHERE product_id = @product_id
+                AND business_id <> @business_id
+        )
+        RETURN -3;
+
+        -- Violation of discount constraint on products
+        IF EXISTS (
+            SELECT 1
+            FROM [Product]
+            WHERE product_id = @product_id
+                AND business_id = @business_id
+                AND discount_amount > 0.5 * @price
+        )
+        RETURN -1;
+
+        BEGIN TRY
+            UPDATE dbo.[Product]
+            SET [name] = @name,
+                [description] = @description,
+                category = @category,
+                price = @price,
+                is_available = @is_available
+            WHERE product_id = @product_id
+                AND business_id = @business_id;
+        END TRY
+        BEGIN CATCH
+            RETURN -1;
+        END CATCH;
+    END
+
+    RETURN 0;
+END
+GO
 
 -- 4.5.d - Toggle_Product_Status (placeholder)
 
