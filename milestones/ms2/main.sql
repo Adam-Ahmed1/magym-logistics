@@ -1193,7 +1193,35 @@ BEGIN
 END
 GO
 
--- 4.5.f - BusinessSalesReport (placeholder)
+-- 4.5.f - BusinessSalesReport
+-- Adam Ahmed Ibrahim - 65-33775
+GO
+CREATE FUNCTION BusinessSalesReport(@business_id INT, @from_date DATE, @to_date DATE)
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT
+        P.product_id,
+        P.[name] AS product_name,
+        SUM(CI.quantity) AS units_sold,
+        SUM(CI.quantity * CI.unit_price) AS revenue_per_product 
+    FROM Business B
+    INNER JOIN SubOrder SO ON
+        SO.[status] <> 'Cancelled'
+        AND SO.business_id = B.business_id
+    INNER JOIN Orders O ON
+        (CAST(O.order_date AS DATE) BETWEEN @from_date AND @to_date)
+        AND O.order_id = SO.order_id
+    INNER JOIN [Product] P ON P.business_id = B.business_id
+    INNER JOIN CartItem CI ON CI.product_id = P.product_id
+    INNER JOIN Cart C ON
+        C.cart_id = O.cart_id
+        AND C.cart_id = CI.cart_id
+    WHERE B.business_id = @business_id
+    GROUP BY P.product_id, P.[name]
+)
+GO
 
 -- 4.5.g - BusinessFeedbackOverview (placeholder)
 
