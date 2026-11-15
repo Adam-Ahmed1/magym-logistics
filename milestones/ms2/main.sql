@@ -420,7 +420,25 @@ BEGIN
 END;
 GO
 
--- 4.2.a - allBusinessProfiles (placeholder)
+-- 4.2.a - allBusinessProfiles
+-- Adam Ahmed Ibrahim - 65-33775
+GO
+CREATE VIEW dbo.allBusinessProfiles
+AS
+    SELECT
+        B.business_id,
+        B.[name] AS business_name,
+        dbo.GetBusinessType_Helper(B.business_id) AS business_type,
+        Z.zone_name,
+        U.first_name + ' ' + U.last_name AS partner_name,
+        B.[status],
+        B.opening_hour,
+        B.closing_hour
+    FROM Business B
+    INNER JOIN [Partner] P ON P.partner_id = B.partner_id
+    INNER JOIN Users U ON U.[user_id] = P.partner_id
+    INNER JOIN [Zone] Z ON Z.zone_id = B.zone_id;
+GO
 
 -- 4.2.b - BusinessesPerZone
 -- mohamed mostafa hassan mohamed - 65-33784
@@ -467,7 +485,7 @@ GO
 
 -- TopSellingProducts helper. Returns business type, 'Restaurant' or 'Pharmacy'
 -- Adam Ahmed Ibrahim - 65-33775
-CREATE FUNCTION dbo.TopSellingProducts_Helper(@business_id INT)
+CREATE FUNCTION dbo.GetBusinessType_Helper(@business_id INT)
 RETURNS VARCHAR(15)
 AS
 BEGIN
@@ -490,7 +508,7 @@ SELECT TOP 10
     CI.product_id,
     P.[name] AS product_name,
     B.[name] AS business_name,
-    dbo.TopSellingProducts_Helper(B.business_id) AS business_type,
+    dbo.GetBusinessType_Helper(B.business_id) AS business_type,
     SUM(CI.quantity) AS units_sold,
     SUM(CI.quantity * CI.unit_price) AS total_revenue
 FROM Cart C
@@ -504,7 +522,7 @@ GROUP BY
     CI.product_id,
     P.[name],
     B.[name],
-    dbo.TopSellingProducts_Helper(B.business_id)
+    dbo.GetBusinessType_Helper(B.business_id)
 ORDER BY units_sold DESC, CI.product_id ASC
 GO
 
