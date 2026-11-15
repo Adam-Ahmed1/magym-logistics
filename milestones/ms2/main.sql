@@ -1118,7 +1118,43 @@ BEGIN
 END
 GO
 
--- 4.5.d - Toggle_Product_Status (placeholder)
+-- 4.5.d - Toggle_Product_Status
+-- Adam Ahmed Ibrahim - 65-33775
+GO
+CREATE PROCEDURE Toggle_Product_Status
+    @product_id INT,
+    @is_available BIT
+AS
+BEGIN
+    IF @product_id IS NULL
+        OR @is_available IS NULL
+    RETURN -1;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM [Product]
+        WHERE product_id = @product_id
+    )
+    RETURN -1;
+
+    -- Suspended business
+    IF @is_available = 1
+        AND EXISTS (
+            SELECT 1
+            FROM [Product] P
+            INNER JOIN Business B ON B.business_id = P.business_id
+            WHERE P.product_id = @product_id
+                AND B.[status] = 'Suspended'
+        )
+    RETURN -4;
+
+    UPDATE [Product]
+    SET is_available = @is_available
+    WHERE product_id = @product_id;
+
+    RETURN 0;
+END
+GO
 
 -- 4.5.e - Set_Product_Promotion (placeholder)
 
