@@ -465,7 +465,48 @@ LEFT JOIN dbo.SubOrder AS s ON s.suborder_id=d.suborder_id
 GROUP BY r.rider_id,u.first_name,u.last_name,zone_id;
 GO
 
--- 4.2.g - TopSellingProducts (placeholder)
+-- TopSellingProducts helper. Returns business type, 'Restaurant' or 'Pharmacy'
+-- Adam Ahmed Ibrahim - 65-33775
+CREATE FUNCTION dbo.TopSellingProducts_Helper(@business_id INT)
+RETURNS VARCHAR(15)
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM Restaurant R
+        WHERE R.business_id = @business_id
+    )
+    RETURN 'Restaurant';
+    
+    RETURN 'Pharmacy';
+END
+
+-- 4.2.g - TopSellingProducts
+-- Adam Ahmed Ibrahim - 65-33775
+GO
+CREATE VIEW dbo.TopSellingProducts
+AS
+SELECT TOP 10
+    CI.product_id,
+    P.[name] AS product_name,
+    B.[name] AS business_name,
+    dbo.TopSellingProducts_Helper(B.business_id) AS business_type,
+    SUM(CI.quantity) AS units_sold,
+    SUM(CI.quantity * CI.unit_price) AS total_revenue
+FROM Cart C
+INNER JOIN CartItem CI ON CI.cart_id = C.cart_id
+INNER JOIN Orders O ON O.cart_id = C.cart_id
+INNER JOIN SubOrder SO ON SO.order_id = O.order_id
+INNER JOIN [Product] P ON P.product_id = CI.product_id
+INNER JOIN Business B ON B.business_id = P.business_id AND B.business_id = SO.business_id
+WHERE SO.[status] <> 'Cancelled'
+GROUP BY
+    CI.product_id,
+    P.[name],
+    B.[name],
+    dbo.TopSellingProducts_Helper(B.business_id)
+ORDER BY units_sold DESC, CI.product_id ASC
+GO
 
 -- 4.2.h - ZoneDeliveryPerformance
 -- Maryam Mustafa Abdelwahab - 64-3003
@@ -1502,6 +1543,7 @@ INNER JOIN dbo.SubOrder AS s ON s.suborder_id= d.suborder_id
     GO
 
 -- Helper
+-- Adam Ahmed Ibrahim - 65-33775
 CREATE FUNCTION dbo.Search_Platform_Helper(@business_name VARCHAR(100), @keyword VARCHAR(100))
 RETURNS INT
 AS
@@ -1527,6 +1569,7 @@ END
 GO
 
 -- 4.8.a - Search_Platform
+-- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE FUNCTION dbo.Search_Platform(@customer_id INT, @keyword VARCHAR(100))
 RETURNS TABLE
