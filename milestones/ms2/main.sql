@@ -2002,7 +2002,30 @@ BEGIN
 END
 GO
 
--- 4.6.p - My_Favorites (placeholder)
+-- 4.6.p - My_Favorites
+-- Adam Ahmed Ibrahim - 65-33775
+GO
+CREATE FUNCTION My_Favorites(@customer_id INT)
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT
+        P.product_id,
+        P.[name] AS product_name,
+        B.[name] AS business_name,
+        CASE
+            WHEN B.[status] = 'Active'
+                AND P.is_available = 1
+            THEN 1
+            ELSE 0
+            END AS is_orderable
+    FROM Favorite_Product FP
+    INNER JOIN [Product] P ON P.product_id = FP.product_id
+    INNER JOIN Business B ON B.business_id = P.business_id
+    WHERE FP.customer_id = @customer_id
+);
+GO
 
 -- 4.6.q - Recommended_Products (placeholder)
 
