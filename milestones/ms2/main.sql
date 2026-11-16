@@ -466,7 +466,23 @@ GO
 
 -- 4.2.d - ActiveVouchers (placeholder)
 
--- 4.2.e - PendingBusinessApprovals (placeholder)
+-- 4.2.e - PendingBusinessApprovals
+-- Adam Ahmed Ibrahim - 65-33775
+GO
+CREATE VIEW dbo.PendingBusinessApprovals
+AS
+    SELECT
+        B.business_id,
+        B.[name] AS business_name,
+        dbo.GetBusinessType_Helper(B.business_id) AS business_type,
+        Z.zone_name,
+        U.first_name + ' ' + U.last_name AS partner_name
+    FROM Business B
+    INNER JOIN [Zone] Z ON Z.zone_id = B.zone_id
+    INNER JOIN [Partner] P ON P.partner_id = B.partner_id
+    INNER JOIN Users U ON U.[user_id] = P.partner_id
+    WHERE B.[status] = 'Pending'
+GO
 
 -- 4.2.f - RiderPerformanceSummary
 -- Maryam Mustafa Abdelwahab - 64-3003
