@@ -366,17 +366,77 @@ AS
 BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
-        DROP PROCEDURE dbo.Suspend_Business;
-        DROP PROCEDURE dbo.Reinstate_Business;
-        DROP PROCEDURE dbo.Create_Zone;
-        DROP PROCEDURE dbo.Update_Zone_Fee;
-        DROP PROCEDURE dbo.clearAllTables;
-        DROP PROCEDURE dbo.dropAllTables;
-        DROP PROCEDURE dbo.createAllTables;
-        DROP FUNCTION dbo.ZoneOrderReport;
-        DROP FUNCTION dbo.Daily_Revenue_Report;
-        DROP FUNCTION dbo.BusinessRefunds;
-        DROP VIEW dbo.BusinessesPerZone;
+            DROP PROCEDURE IF EXISTS dbo.Customer_Register;
+            DROP PROCEDURE IF EXISTS dbo.Partner_Register;
+            DROP PROCEDURE IF EXISTS dbo.Rider_Register;
+            DROP PROCEDURE IF EXISTS dbo.Change_Password;
+            DROP PROCEDURE IF EXISTS dbo.Create_Admin;
+            DROP PROCEDURE IF EXISTS dbo.Approve_Business;
+            DROP PROCEDURE IF EXISTS dbo.Reject_Business;
+            DROP PROCEDURE IF EXISTS dbo.Assign_Admin_Zone;
+            DROP PROCEDURE IF EXISTS dbo.Issue_Voucher;
+            DROP PROCEDURE IF EXISTS dbo.Blacklist_Customer;
+            DROP PROCEDURE IF EXISTS dbo.Lift_Customer_Blacklist;
+            DROP PROCEDURE IF EXISTS dbo.Submit_Feedback;
+            DROP PROCEDURE IF EXISTS dbo.Rate_Rider;
+            DROP PROCEDURE IF EXISTS dbo.Mark_Picked_Up;
+            DROP PROCEDURE IF EXISTS dbo.Mark_Delivered;
+            DROP PROCEDURE IF EXISTS dbo.Suspend_Business;
+            DROP PROCEDURE IF EXISTS dbo.Reinstate_Business;
+            DROP PROCEDURE IF EXISTS dbo.Create_Zone;
+            DROP PROCEDURE IF EXISTS dbo.Update_Zone_Fee;
+            DROP PROCEDURE IF EXISTS dbo.clearAllTables;
+            DROP PROCEDURE IF EXISTS dbo.dropAllTables;
+            DROP PROCEDURE IF EXISTS dbo.createAllTables;
+            DROP PROCEDURE IF EXISTS dbo.Register_Business;
+            DROP PROCEDURE IF EXISTS dbo.Update_Business_Info;
+            DROP PROCEDURE IF EXISTS dbo.Upsert_Product;
+            DROP PROCEDURE IF EXISTS dbo.Toggle_Product_Status;
+            DROP PROCEDURE IF EXISTS dbo.Set_Product_Promotion;
+            DROP PROCEDURE IF EXISTS dbo.Add_Customer_Address;
+            DROP PROCEDURE IF EXISTS dbo.Update_Delete_Customer_Address;
+            DROP PROCEDURE IF EXISTS dbo.Reorder;
+            DROP PROCEDURE IF EXISTS dbo.Change_Active_Address;
+            DROP PROCEDURE IF EXISTS dbo.Add_Card;
+            DROP PROCEDURE IF EXISTS dbo.Create_Cart;
+            DROP PROCEDURE IF EXISTS dbo.Add_To_Cart;
+            DROP PROCEDURE IF EXISTS dbo.Remove_From_Cart;
+            DROP PROCEDURE IF EXISTS dbo.Checkout_Cart;
+            DROP PROCEDURE IF EXISTS dbo.Cancel_Order;
+            DROP PROCEDURE IF EXISTS dbo.Toggle_Favorite;
+            DROP PROCEDURE IF EXISTS dbo.Set_Rider_Availability;
+            DROP FUNCTION IF EXISTS dbo.CustomerLoginValidation;
+            DROP FUNCTION IF EXISTS dbo.PartnerLoginValidation;
+            DROP FUNCTION IF EXISTS dbo.RiderLoginValidation;
+            DROP FUNCTION IF EXISTS dbo.AdminLoginValidation;
+            DROP FUNCTION IF EXISTS dbo.TopRiders;
+            DROP FUNCTION IF EXISTS dbo.BusinessFeedbackOverview;
+            DROP FUNCTION IF EXISTS dbo.Recommended_Products;
+            DROP FUNCTION IF EXISTS dbo.My_Earnings;
+            DROP FUNCTION IF EXISTS dbo.My_Rating_Summary;
+            DROP FUNCTION IF EXISTS dbo.Reconcile_Order_Totals;
+            DROP FUNCTION IF EXISTS dbo.Platform_Health_Snapshot;
+            DROP FUNCTION IF EXISTS dbo.ZoneOrderReport;
+            DROP FUNCTION IF EXISTS dbo.Daily_Revenue_Report;
+            DROP FUNCTION IF EXISTS dbo.BusinessRefunds;
+            DROP FUNCTION IF EXISTS dbo.BusinessSalesReport;
+            DROP FUNCTION IF EXISTS dbo.Calculate_Voucher_Discount;
+            DROP FUNCTION IF EXISTS dbo.My_Order_History;
+            DROP FUNCTION IF EXISTS dbo.My_Favorites;
+            DROP FUNCTION IF EXISTS dbo.My_Active_Deliveries;
+            DROP FUNCTION IF EXISTS dbo.My_Delivery_History;
+            DROP FUNCTION IF EXISTS dbo.Search_Platform;
+            DROP FUNCTION IF EXISTS dbo.Nearby_Businesses_By_Category;
+            DROP FUNCTION IF EXISTS dbo.Search_Platform_Helper;
+            DROP VIEW IF EXISTS dbo.ActiveVouchers;
+            DROP VIEW IF EXISTS dbo.BusinessesPerZone;
+            DROP VIEW IF EXISTS dbo.allBusinessProfiles;
+            DROP VIEW IF EXISTS dbo.BusinessRatingsSummary;
+            DROP VIEW IF EXISTS dbo.PendingBusinessApprovals;
+            DROP VIEW IF EXISTS dbo.RiderPerformanceSummary;
+            DROP VIEW IF EXISTS dbo.TopSellingProducts;
+            DROP VIEW IF EXISTS dbo.ZoneDeliveryPerformance;
+            DROP FUNCTION IF EXISTS dbo.GetBusinessType_Helper;
         COMMIT TRANSACTION;
         RETURN 0;
     END TRY
@@ -384,7 +444,7 @@ BEGIN
         IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
         RETURN -1;
-    END CATCH
+    END CATCH;
 END;
 GO
 
@@ -419,6 +479,22 @@ BEGIN
     END CATCH;
 END;
 GO
+
+-- Returns business type, 'Restaurant' or 'Pharmacy'
+-- Adam Ahmed Ibrahim - 65-33775
+CREATE FUNCTION dbo.GetBusinessType_Helper(@business_id INT)
+RETURNS VARCHAR(15)
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM Restaurant R
+        WHERE R.business_id = @business_id
+    )
+    RETURN 'Restaurant';
+    
+    RETURN 'Pharmacy';
+END
 
 -- 4.2.a - allBusinessProfiles
 -- Adam Ahmed Ibrahim - 65-33775
@@ -489,31 +565,15 @@ GO
 CREATE VIEW dbo.RiderPerformanceSummary
 AS 
 SELECT r.rider_id, u.first_name + ' ' + u.last_name AS rider_name,
-z.zone_name, COUNT(CASE WHEN s.status='Delievered' THEN 1 END) AS completed_deliveries,
+z.zone_name, COUNT(CASE WHEN s.status='Delivered' THEN 1 END) AS completed_deliveries,
 CAST(AVG(CAST(d.rider_rating AS decimal(10,2))) as decimal(10,2)) as average_rating
 FROM dbo.Rider r
 INNER JOIN dbo.Users as u ON u.user_id=r.rider_id
-INNER JOIN dbo.Zones AS z ON z.zone_id=r.zone_id
+INNER JOIN dbo.Zone AS z ON z.zone_id=r.zone_id
 LEFT JOIN dbo.Delivery AS d ON d.rider_id=r.rider_id
 LEFT JOIN dbo.SubOrder AS s ON s.suborder_id=d.suborder_id
-GROUP BY r.rider_id,u.first_name,u.last_name,zone_id;
+GROUP BY r.rider_id,u.first_name,u.last_name,zone_id,z.zone_name;
 GO
-
--- TopSellingProducts helper. Returns business type, 'Restaurant' or 'Pharmacy'
--- Adam Ahmed Ibrahim - 65-33775
-CREATE FUNCTION dbo.GetBusinessType_Helper(@business_id INT)
-RETURNS VARCHAR(15)
-AS
-BEGIN
-    IF EXISTS (
-        SELECT 1
-        FROM Restaurant R
-        WHERE R.business_id = @business_id
-    )
-    RETURN 'Restaurant';
-    
-    RETURN 'Pharmacy';
-END
 
 -- 4.2.g - TopSellingProducts
 -- Adam Ahmed Ibrahim - 65-33775
@@ -2069,7 +2129,7 @@ INNER JOIN dbo.Orders AS o ON o.order_id=s.order_id
 INNER JOIN dbo.Zone AS z ON z.zone_id=o.zone_id
 INNER JOIN dbo.Cart AS  c ON c.Cart_id = o.cart_id
 INNER JOIN dbo.Address AS a ON a.address_id= c.address_id
-INNER JOIN dbo.UsersAS u ON u.user_id=c.customer_id
+INNER JOIN dbo.Users AS u ON u.user_id=c.customer_id
 WHERE d.rider_id=@rider_int AND s.status IN ('Assigned', 'Picked Up'));
 GO
 
