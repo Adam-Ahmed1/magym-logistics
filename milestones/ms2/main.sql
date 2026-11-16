@@ -1372,7 +1372,7 @@ AS BEGIN
         INNER JOIN Orders o on o.cart_id=ca.cart_id
         WHERE a.address_id=@address_id AND o.status IN ('Placed','In Progress')
     )
-        RETURN -1;
+        RETURN -4;
     ELSE
         BEGIN
              IF @action='update'
@@ -1399,7 +1399,7 @@ AS BEGIN
                         INNER JOIN Cart ca on ca.customer_id=cu.customer_id
                         WHERE ca.address_id=@address_id
                     )
-                        RETURN -1;
+                        RETURN -4;
 
                     BEGIN TRY
                         DELETE FROM Address
