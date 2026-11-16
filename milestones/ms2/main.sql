@@ -2048,6 +2048,41 @@ GO
 
 -- 4.8.b - Reconcile_Order_Totals (placeholder)
 
--- 4.8.c - Nearby_Businesses_By_Category (placeholder)
+-- 4.8.c - Nearby_Businesses_By_Category
+-- Adam Ahmed Ibrahim - 65-33775
+GO
+CREATE FUNCTION Nearby_Businesses_By_Category(@address_id INT, @product_category VARCHAR(50))
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT
+        B.business_id,
+        B.[name] AS business_name,
+        Z.zone_name,
+        CASE WHEN Z.zone_id = A.zone_id THEN 1 ELSE 0 END AS same_zone,
+        (
+            SELECT AVG(CAST(D.tracking_time AS DECIMAL(10,2)))
+            FROM Orders O
+            INNER JOIN SubOrder SO ON SO.order_id = O.order_id
+            INNER JOIN Delivery D ON D.suborder_id = SO.suborder_id
+            WHERE O.zone_id = B.zone_id
+                AND SO.[status] = 'Delivered'
+        ) AS zone_avg_delivery_time
+    FROM Business B
+    INNER JOIN [Zone] Z ON Z.zone_id = B.zone_id
+    INNER JOIN [Address] A ON A.address_id = @address_id
+    WHERE B.[status] = 'Active'
+        AND EXISTS (
+            SELECT 1
+            FROM [Product] P
+            WHERE P.business_id = B.business_id
+                AND P.category = @product_category
+                AND P.is_available = 1
+        )
+    ORDER BY same_zone DESC, zone_avg_delivery_time
+    OFFSET 0 ROWS -- To allow ORDER BY inside a TVF
+);
+GO
 
 -- 4.8.d - Platform_Health_Snapshot (placeholder)
