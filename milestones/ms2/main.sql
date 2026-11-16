@@ -1924,7 +1924,83 @@ AS RETURN(
 GO
 
 
--- 4.6.o - Toggle_Favorite (placeholder)
+-- 4.6.o - Toggle_Favorite
+-- Adam Ahmed Ibrahim - 65-33775
+GO
+CREATE PROCEDURE Toggle_Favorite
+    @customer_id INT,
+    @item_id INT,
+    @item_type VARCHAR(20)
+AS
+BEGIN
+    IF @customer_id IS NULL
+        OR @item_id IS NULL
+        OR @item_type IS NULL
+        OR @item_type NOT IN ('Business', 'Product')
+    RETURN -1;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM Customer
+        WHERE customer_id = @customer_id
+    )
+    RETURN -1;
+
+    IF @item_type = 'Business'
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1
+            FROM Business
+            WHERE business_id = @item_id
+        )
+        RETURN -1;
+
+        IF EXISTS (
+            SELECT 1
+            FROM Favorite_Business
+            WHERE customer_id = @customer_id
+                AND business_id = @item_id
+        )
+        BEGIN
+            DELETE FROM Favorite_Business
+            WHERE customer_id = @customer_id
+                AND business_id = @item_id;
+        END
+        ELSE
+        BEGIN
+            INSERT INTO Favorite_Business(customer_id, business_id)
+            VALUES (@customer_id, @item_id);
+        END
+    END
+    ELSE
+    BEGIN
+        IF NOT EXISTS (
+                SELECT 1
+                FROM [Product]
+                WHERE product_id = @item_id
+            )
+        RETURN -1;
+
+        IF EXISTS (
+            SELECT 1
+            FROM Favorite_Product
+            WHERE customer_id = @customer_id
+                AND product_id = @item_id
+        )
+        BEGIN
+            DELETE FROM Favorite_Product
+            WHERE customer_id = @customer_id
+                AND product_id = @item_id;
+        END
+        ELSE
+        BEGIN
+            INSERT INTO Favorite_Product(customer_id, product_id)
+            VALUES (@customer_id, @item_id);
+        END
+    END
+    RETURN 0;
+END
+GO
 
 -- 4.6.p - My_Favorites (placeholder)
 
