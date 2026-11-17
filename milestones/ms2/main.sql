@@ -574,13 +574,13 @@ CREATE VIEW dbo.RiderPerformanceSummary
 AS 
 SELECT r.rider_id, u.first_name + ' ' + u.last_name AS rider_name,
 z.zone_name, COUNT(CASE WHEN s.status='Delivered' THEN 1 END) AS completed_deliveries,
-CAST(AVG(CAST(d.rider_rating AS decimal(10,2))) as decimal(10,2)) as average_rating
+CAST(AVG(CAST(d.rider_rating AS decimal(10,2))) as decimal(10,2)) as avg_rating
 FROM dbo.Rider r
 INNER JOIN dbo.Users as u ON u.user_id=r.rider_id
 INNER JOIN dbo.Zone AS z ON z.zone_id=r.zone_id
 LEFT JOIN dbo.Delivery AS d ON d.rider_id=r.rider_id
 LEFT JOIN dbo.SubOrder AS s ON s.suborder_id=d.suborder_id
-GROUP BY r.rider_id,u.first_name,u.last_name,zone_id,z.zone_name;
+GROUP BY r.rider_id,u.first_name,u.last_name,r.zone_id,z.zone_name;
 GO
 
 -- 4.2.g - TopSellingProducts
@@ -1320,31 +1320,28 @@ BEGIN
         SELECT 1
         FROM dbo.Admin
         WHERE admin_id = @super_admin_id
-          AND role = 'Super Admin'
-    )
-        RETURN -3;
-
-    IF NOT EXISTS (
+    ) OR NOT EXISTS (
         SELECT 1
         FROM dbo.Admin
         WHERE admin_id = @admin_id
     )
-        RETURN -1;
+    RETURN -1;
 
-    IF NOT EXISTS (
+    IF EXISTS (
+        SELECT 1
+        FROM dbo.Admin
+        WHERE admin_id = @super_admin_id
+            AND role <> 'Super Admin'
+    )
+    RETURN -3;
+
+    IF EXISTS (
         SELECT 1
         FROM dbo.Admin
         WHERE admin_id = @admin_id
-          AND role = 'Zone Admin'
+            AND role <> 'Zone Admin'
     )
-        RETURN -3;
-
-    IF NOT EXISTS (
-        SELECT 1
-        FROM dbo.Zone
-        WHERE zone_id = @zone_id
-    )
-        RETURN -1;
+    RETURN -1;
 
     UPDATE dbo.Admin
     SET zone_id = @zone_id
@@ -2566,7 +2563,7 @@ GO
 
 -- 4.6.j - Cancel_Order
 --yehia tamer mohamed 64-1694
-CREATE PROCEDURE Cancel_Order 
+CREATE PROCEDURE Cancel_Order
 @order_id INT
 AS BEGIN
 

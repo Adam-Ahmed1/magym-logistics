@@ -6,74 +6,29 @@ PU-4.1.b    PASS  createAllTables: tables, column order, types, NULL-ability, pr
 PU-4.2.a    PASS  allBusinessProfiles lists every business (any status) with type, zone and partner
 PU-4.2.b    PASS  BusinessesPerZone counts Active businesses and keeps empty zones
 PU-4.2.c    PASS  BusinessRatingsSummary averages feedback per business
-PU-4.2.d    FAIL  ActiveVouchers returns Unused, non-expired vouchers
-                  - columns: cannot describe [SELECT * FROM dbo.ActiveVouchers]: Invalid object name 'dbo.ActiveVouchers'.
-                  - rows: error while running [SELECT * FROM dbo.ActiveVouchers]: Invalid object name 'dbo.ActiveVouchers'.
+PU-4.2.d    PASS  ActiveVouchers returns Unused, non-expired vouchers
 PU-4.2.e    PASS  PendingBusinessApprovals returns Pending businesses only
-PU-4.2.f    FAIL  RiderPerformanceSummary lists every rider with completed deliveries and rating
-                  - columns: cannot describe [SELECT * FROM dbo.RiderPerformanceSummary]: Invalid object name 'dbo.RiderPerformanceSummary'.
-                  - rows: error while running [SELECT * FROM dbo.RiderPerformanceSummary]: Invalid object name 'dbo.RiderPerformanceSummary'.
+PU-4.2.f    PASS  RiderPerformanceSummary lists every rider with completed deliveries and rating
 PU-4.2.g    PASS  TopSellingProducts returns the top 10 by units, ignoring cancelled SubOrders
 PU-4.2.h    PASS  ZoneDeliveryPerformance counts Delivered deliveries per zone
-PU-4.3.a-1  FAIL  Customer_Register creates an Active customer with a 0 wallet and a phone
-                  - register: the call raised an error instead of returning 0 [dbo.Customer_Register 'Mariam', NULL, 'Wael', 'mariam.wael', 'Pass@025', 'mariam.wael@mail.com', '01000000025', '2001-05-05']: Could not find stored procedure 'dbo.Customer_Register'.
-                  - status: expected Active but got NULL
-                  - wallet: expected 0.00 but got NULL
-                  - phone: expected 01000000025 but got NULL
-PU-4.3.a-2  FAIL  Customer_Register returns -2 for a duplicate username and -1 for an invalid phone
-                  - duplicate username: the call raised an error instead of returning -2 [dbo.Customer_Register 'Mariam', NULL, 'Wael', 'ahmed.salem', 'Pass@025', 'mariam.wael@mail.com', '01000000025', '2001-05-05']: Could not find stored procedure 'dbo.Customer_Register'.
-                  - invalid phone: the call raised an error instead of returning -1 [dbo.Customer_Register 'Mariam', NULL, 'Wael', 'mariam.wael', 'Pass@025', 'mariam.wael@mail.com', '0100', '2001-05-05']: Could not find stored procedure 'dbo.Customer_Register'.
-PU-4.3.b-1  FAIL  Partner_Register creates a partner without a business
-                  - register: the call raised an error instead of returning 0 [dbo.Partner_Register 'Omar', NULL, 'Fawzy', 'omar.fawzy', 'Pass@025', 'omar.fawzy@mail.com', '01000000025', '1988-08-08']: Could not find stored procedure 'dbo.Partner_Register'.
-                  - partner row: expected 1 but got 0
-PU-4.3.b-2  FAIL  Partner_Register returns -2 for a duplicate email
-                  - duplicate email: the call raised an error instead of returning -2 [dbo.Partner_Register 'Omar', NULL, 'Fawzy', 'omar.fawzy', 'Pass@025', 'tarek.fouad@mail.com', '01000000025', '1988-08-08']: Could not find stored procedure 'dbo.Partner_Register'.
-PU-4.3.c-1  FAIL  Rider_Register creates an available rider in the given zone
-                  - register: the call raised an error instead of returning 0 [dbo.Rider_Register 'Hady', NULL, 'Wagdy', 'hady.wagdy', 'Pass@025', 'hady.wagdy@mail.com', '01000000025', '1997-03-03', 'Motorcycle', 'MAA-9999', 'LIC-9999', 2]: Could not find stored procedure 'dbo.Rider_Register'.
-                  - rider: expected Motorcycle/MAA-9999/LIC-9999/1/2 but got NULL
-PU-4.3.c-2  FAIL  Rider_Register returns -2 for a duplicate plate number
-                  - duplicate plate: the call raised an error instead of returning -2 [dbo.Rider_Register 'Hady', NULL, 'Wagdy', 'hady.wagdy', 'Pass@025', 'hady.wagdy@mail.com', '01000000025', '1997-03-03', 'Motorcycle', 'MAA-1201', 'LIC-9999', 2]: Could not find stored procedure 'dbo.Rider_Register'.
-PU-4.3.d    FAIL  CustomerLoginValidation accepts valid Active customers only
-                  - valid: error while evaluating [SELECT dbo.CustomerLoginValidation('ahmed.salem', 'Pass@017')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.CustomerLoginValidation", or the name is ambiguous.
-                  - wrong password: error while evaluating [SELECT dbo.CustomerLoginValidation('ahmed.salem', 'wrong')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.CustomerLoginValidation", or the name is ambiguous.
-                  - a partner is not a customer: error while evaluating [SELECT dbo.CustomerLoginValidation('tarek.fouad', 'Pass@004')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.CustomerLoginValidation", or the name is ambiguous.
-                  - blacklisted customer: error while evaluating [SELECT dbo.CustomerLoginValidation('youssef.amin', 'Pass@021')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.CustomerLoginValidation", or the name is ambiguous.
-PU-4.3.e    FAIL  PartnerLoginValidation accepts partners only
-                  - valid: error while evaluating [SELECT dbo.PartnerLoginValidation('tarek.fouad', 'Pass@004')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.PartnerLoginValidation", or the name is ambiguous.
-                  - a customer is not a partner: error while evaluating [SELECT dbo.PartnerLoginValidation('ahmed.salem', 'Pass@017')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.PartnerLoginValidation", or the name is ambiguous.
-PU-4.3.f    FAIL  RiderLoginValidation accepts riders only
-                  - valid: error while evaluating [SELECT dbo.RiderLoginValidation('ali.ibrahim', 'Pass@012')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.RiderLoginValidation", or the name is ambiguous.
-                  - a customer is not a rider: error while evaluating [SELECT dbo.RiderLoginValidation('ahmed.salem', 'Pass@017')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.RiderLoginValidation", or the name is ambiguous.
-PU-4.3.g    FAIL  AdminLoginValidation accepts admins only
-                  - super admin: error while evaluating [SELECT dbo.AdminLoginValidation('mona.hassan', 'Pass@001')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.AdminLoginValidation", or the name is ambiguous.
-                  - a customer is not an admin: error while evaluating [SELECT dbo.AdminLoginValidation('ahmed.salem', 'Pass@017')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.AdminLoginValidation", or the name is ambiguous.
-PU-4.3.h-1  FAIL  Change_Password changes the password and sets success = 1
-                  - change: the call raised an error instead of returning 0 [dbo.Change_Password 17, 'Pass@017', 'New@123', 'New@123', @ok OUTPUT]: Could not find stored procedure 'dbo.Change_Password'.
-                  - success flag: expected 1 but got NULL
-                  - new password works: error while evaluating [SELECT dbo.CustomerLoginValidation('ahmed.salem', 'New@123')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.CustomerLoginValidation", or the name is ambiguous.
-PU-4.3.h-2  FAIL  Change_Password returns -1 with success = 0 and changes nothing when the repeat differs or the old password is wrong
-                  - repeat differs: the call raised an error instead of returning -1 [dbo.Change_Password 17, 'Pass@017', 'New@123', 'Other@123', @ok OUTPUT]: Could not find stored procedure 'dbo.Change_Password'.
-                  - success flag: expected 0 but got NULL
-                  - wrong old password: the call raised an error instead of returning -1 [dbo.Change_Password 17, 'wrong', 'New@123', 'New@123', @ok OUTPUT]: Could not find stored procedure 'dbo.Change_Password'.
-                  - success flag: expected 0 but got NULL
-                  - old password still works: error while evaluating [SELECT dbo.CustomerLoginValidation('ahmed.salem', 'Pass@017')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.CustomerLoginValidation", or the name is ambiguous.
-PU-4.4.a-1  FAIL  Create_Admin: a Super Admin creates a Zone Admin
-                  - create: the call raised an error instead of returning 0 [dbo.Create_Admin 'Laila', NULL, 'Gamal', 'laila.gamal', 'Pass@028', 'laila.gamal@mail.com', '01000000028', '1989-09-09', 'Zone Admin', 4, 1]: Could not find stored procedure 'dbo.Create_Admin'.
-                  - admin row: expected Zone Admin/4 but got NULL
-PU-4.4.a-2  FAIL  Create_Admin returns -3 when a Zone Admin calls it
-                  - zone admin caller: the call raised an error instead of returning -3 [dbo.Create_Admin 'Laila', NULL, 'Gamal', 'laila.gamal', 'Pass@028', 'laila.gamal@mail.com', '01000000028', '1989-09-09', 'Zone Admin', 4, 2]: Could not find stored procedure 'dbo.Create_Admin'.
-PU-4.4.b-1  FAIL  Approve_Business: the Zone Admin of the zone approves a Pending business
-                  - approve: the call raised an error instead of returning 0 [dbo.Approve_Business 5, 3]: Could not find stored procedure 'dbo.Approve_Business'.
-                  - status: expected Active but got Pending
-PU-4.4.b-2  FAIL  Approve_Business returns -3 for a Zone Admin of another zone and -4 for a business that is not Pending
-                  - other zone: the call raised an error instead of returning -3 [dbo.Approve_Business 5, 2]: Could not find stored procedure 'dbo.Approve_Business'.
-                  - not pending: the call raised an error instead of returning -4 [dbo.Approve_Business 1, 1]: Could not find stored procedure 'dbo.Approve_Business'.
-PU-4.4.c-1  FAIL  Reject_Business changes a Pending business to Rejected
-                  - reject: the call raised an error instead of returning 0 [dbo.Reject_Business 5, 1]: Could not find stored procedure 'dbo.Reject_Business'.
-                  - status: expected Rejected but got Pending
-PU-4.4.c-2  FAIL  Reject_Business returns -3 for a Zone Admin of another zone and -4 for a business that is not Pending
-                  - other zone: the call raised an error instead of returning -3 [dbo.Reject_Business 5, 2]: Could not find stored procedure 'dbo.Reject_Business'.
-                  - not pending: the call raised an error instead of returning -4 [dbo.Reject_Business 2, 1]: Could not find stored procedure 'dbo.Reject_Business'.
+PU-4.3.a-1  PASS  Customer_Register creates an Active customer with a 0 wallet and a phone
+PU-4.3.a-2  PASS  Customer_Register returns -2 for a duplicate username and -1 for an invalid phone
+PU-4.3.b-1  PASS  Partner_Register creates a partner without a business
+PU-4.3.b-2  PASS  Partner_Register returns -2 for a duplicate email
+PU-4.3.c-1  PASS  Rider_Register creates an available rider in the given zone
+PU-4.3.c-2  PASS  Rider_Register returns -2 for a duplicate plate number
+PU-4.3.d    PASS  CustomerLoginValidation accepts valid Active customers only
+PU-4.3.e    PASS  PartnerLoginValidation accepts partners only
+PU-4.3.f    PASS  RiderLoginValidation accepts riders only
+PU-4.3.g    PASS  AdminLoginValidation accepts admins only
+PU-4.3.h-1  PASS  Change_Password changes the password and sets success = 1
+PU-4.3.h-2  PASS  Change_Password returns -1 with success = 0 and changes nothing when the repeat differs or the old password is wrong
+PU-4.4.a-1  PASS  Create_Admin: a Super Admin creates a Zone Admin
+PU-4.4.a-2  PASS  Create_Admin returns -3 when a Zone Admin calls it
+PU-4.4.b-1  PASS  Approve_Business: the Zone Admin of the zone approves a Pending business
+PU-4.4.b-2  PASS  Approve_Business returns -3 for a Zone Admin of another zone and -4 for a business that is not Pending
+PU-4.4.c-1  PASS  Reject_Business changes a Pending business to Rejected
+PU-4.4.c-2  PASS  Reject_Business returns -3 for a Zone Admin of another zone and -4 for a business that is not Pending
 PU-4.4.d-1  PASS  Suspend_Business hides the business, cancels its Placed/Assigned SubOrders and refunds them
 PU-4.4.d-2  PASS  Suspend_Business restores the voucher of an order it cancels entirely and caps the refund at the payment
 PU-4.4.d-3  PASS  Suspend_Business returns -3 out of scope and -4 for a business that is not Active
@@ -83,35 +38,14 @@ PU-4.4.f-1  PASS  Create_Zone creates a zone
 PU-4.4.f-2  PASS  Create_Zone returns -2 for a duplicate name, -3 for a Zone Admin and -1 for a negative fee
 PU-4.4.g-1  PASS  Update_Zone_Fee changes the fee without touching existing SubOrders
 PU-4.4.g-2  PASS  Update_Zone_Fee returns -3 for a Zone Admin and -1 for a negative fee
-PU-4.4.h-1  FAIL  Assign_Admin_Zone moves a Zone Admin
-                  - assign: the call raised an error instead of returning 0 [dbo.Assign_Admin_Zone 2, 4, 1]: Could not find stored procedure 'dbo.Assign_Admin_Zone'.
-                  - zone: expected 4 but got 1
-PU-4.4.h-2  FAIL  Assign_Admin_Zone returns -1 for a Super Admin target and -3 for a Zone Admin caller
-                  - super admin target: the call raised an error instead of returning -1 [dbo.Assign_Admin_Zone 1, 4, 1]: Could not find stored procedure 'dbo.Assign_Admin_Zone'.
-                  - zone admin caller: the call raised an error instead of returning -3 [dbo.Assign_Admin_Zone 3, 4, 2]: Could not find stored procedure 'dbo.Assign_Admin_Zone'.
-PU-4.4.i-1  FAIL  Issue_Voucher creates an Unused voucher
-                  - issue: the call raised an error instead of returning 0 [dbo.Issue_Voucher 17, 'NEW20', 0, 20.00, '2030-12-31', 1]: Could not find stored procedure 'dbo.Issue_Voucher'.
-                  - voucher: expected Unused/20.00/0/17 but got NULL
-PU-4.4.i-2  FAIL  Issue_Voucher returns -3 for a Blacklisted customer and -2 for a duplicate promo code
-                  - blacklisted customer: the call raised an error instead of returning -3 [dbo.Issue_Voucher 21, 'NEW20', 0, 20.00, '2030-12-31', 1]: Could not find stored procedure 'dbo.Issue_Voucher'.
-                  - duplicate code: the call raised an error instead of returning -2 [dbo.Issue_Voucher 17, 'SAVE10', 0, 20.00, '2030-12-31', 1]: Could not find stored procedure 'dbo.Issue_Voucher'.
-PU-4.4.j-1  FAIL  Blacklist_Customer blocks the account, cancels cancellable orders, refunds and deletes Unused vouchers
-                  - blacklist: the call raised an error instead of returning 0 [dbo.Blacklist_Customer 22, 2, 'Chargeback fraud']: Could not find stored procedure 'dbo.Blacklist_Customer'.
-                  - account: expected Blacklisted but got Active
-                  - blacklist row: expected 2/Chargeback fraud but got NULL
-                  - order 8 cancelled: expected Cancelled but got Placed
-                  - refund and wallet: expected 155.00/180.00 but got 0.00/25.00
-                  - vouchers of the customer: expected 0 but got 1
-PU-4.4.j-2  FAIL  Blacklist_Customer returns -4 if already Blacklisted and -3 for a Zone Admin without an address in the zone
-                  - already blacklisted: the call raised an error instead of returning -4 [dbo.Blacklist_Customer 21, 1, 'Again']: Could not find stored procedure 'dbo.Blacklist_Customer'.
-                  - zone admin of another zone: the call raised an error instead of returning -3 [dbo.Blacklist_Customer 22, 3, 'Fraud']: Could not find stored procedure 'dbo.Blacklist_Customer'.
-PU-4.4.k-1  FAIL  Lift_Customer_Blacklist: the admin who blacklisted the customer lifts it
-                  - lift: the call raised an error instead of returning 0 [dbo.Lift_Customer_Blacklist 21, 2]: Could not find stored procedure 'dbo.Lift_Customer_Blacklist'.
-                  - account: expected Active but got Blacklisted
-                  - blacklist row removed: expected 0 but got 1
-PU-4.4.k-2  FAIL  Lift_Customer_Blacklist returns -3 for any other admin, even a Super Admin
-                  - super admin: the call raised an error instead of returning -3 [dbo.Lift_Customer_Blacklist 21, 1]: Could not find stored procedure 'dbo.Lift_Customer_Blacklist'.
-                  - other zone admin: the call raised an error instead of returning -3 [dbo.Lift_Customer_Blacklist 21, 3]: Could not find stored procedure 'dbo.Lift_Customer_Blacklist'.
+PU-4.4.h-1  PASS  Assign_Admin_Zone moves a Zone Admin
+PU-4.4.h-2  PASS  Assign_Admin_Zone returns -1 for a Super Admin target and -3 for a Zone Admin caller
+PU-4.4.i-1  PASS  Issue_Voucher creates an Unused voucher
+PU-4.4.i-2  PASS  Issue_Voucher returns -3 for a Blacklisted customer and -2 for a duplicate promo code
+PU-4.4.j-1  PASS  Blacklist_Customer blocks the account, cancels cancellable orders, refunds and deletes Unused vouchers
+PU-4.4.j-2  PASS  Blacklist_Customer returns -4 if already Blacklisted and -3 for a Zone Admin without an address in the zone
+PU-4.4.k-1  PASS  Lift_Customer_Blacklist: the admin who blacklisted the customer lifts it
+PU-4.4.k-2  PASS  Lift_Customer_Blacklist returns -3 for any other admin, even a Super Admin
 PU-4.4.l    PASS  ZoneOrderReport for Maadi and New Cairo in September
 PU-4.4.m    FAIL  TopRiders ranks riders by deliveries delivered in the period
                   - columns: cannot describe [SELECT * FROM dbo.TopRiders('2026-09-01', '2026-09-30')]: Invalid object name 'dbo.TopRiders'.
@@ -210,51 +144,20 @@ PU-4.8.d    FAIL  Platform_Health_Snapshot on the seed data
                   - columns: cannot describe [SELECT * FROM dbo.Platform_Health_Snapshot()]: Invalid object name 'dbo.Platform_Health_Snapshot'.
                   - rows: error while running [SELECT * FROM dbo.Platform_Health_Snapshot()]: Invalid object name 'dbo.Platform_Health_Snapshot'.
 PP-1        FAIL  New customer: register, address, card, voucher, cart, checkout, delivery, feedback, rating
-                  - register: the call raised an error instead of returning 0 [dbo.Customer_Register 'Mariam', NULL, 'Wael', 'mariam.wael', 'Pass@025', 'mariam.wael@mail.com', '01000000025', '2001-05-05']: Could not find stored procedure 'dbo.Customer_Register'.
-                  - login works: error while evaluating [SELECT dbo.CustomerLoginValidation('mariam.wael', 'Pass@025')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.CustomerLoginValidation", or the name is ambiguous.
-                  - address: expected return code 0 but got -1 [dbo.Add_Customer_Address 25, 'Corniche Tower 2', 1]
-                  - card: expected return code 0 but got -1 [dbo.Add_Card 25, '4555555555555555', 'Mariam Wael', '2031-12-31']
-                  - voucher: the call raised an error instead of returning 0 [dbo.Issue_Voucher 25, 'MARIAM10', 1, 10.00, '2030-12-31', 1]: Could not find stored procedure 'dbo.Issue_Voucher'.
-                  - cart: expected return code 0 but got -1 [dbo.Create_Cart 25]
-                  - add 1: expected return code 0 but got -1 [dbo.Add_To_Cart 16, 2, 2, NULL]
-                  - add 2: expected return code 0 but got -1 [dbo.Add_To_Cart 16, 9, 1, 'Sealed box']
-                  - checkout: expected return code 0 but got -1 [dbo.Checkout_Cart 16, 8, 'Card', 6]
-                  - order (80 + 80 = 160, 10% = 16, + 2 x 20): expected 16.00/184.00/Placed but got NULL
-                  - card charged: expected Card/184.00/6 but got NULL
                   - Unexpected error in [DECLARE @d1 INT = (SELECT d.delivery_id FROM dbo.Delivery d JOIN dbo.SubOrder s ON s.suborder_id = d.suborder_id JOIN dbo.Orders o ON o.order_id = s.order_id WHERE o.cart_id = 16 AND s.business_id = 1]: Could not find stored procedure 'dbo.Mark_Picked_Up'.
-                  - order in progress after one delivery: expected In Progress but got NULL
+                  - order in progress after one delivery: expected In Progress but got Placed
                   - Unexpected error in [DECLARE @d3 INT = (SELECT d.delivery_id FROM dbo.Delivery d JOIN dbo.SubOrder s ON s.suborder_id = d.suborder_id JOIN dbo.Orders o ON o.order_id = s.order_id WHERE o.cart_id = 16 AND s.business_id = 3]: Could not find stored procedure 'dbo.Mark_Delivered'.
-                  - order delivered: expected Delivered but got NULL
+                  - order delivered: expected Delivered but got Placed
                   - Unexpected error in [DECLARE @s1 INT = (SELECT s.suborder_id FROM dbo.SubOrder s JOIN dbo.Orders o ON o.order_id = s.order_id WHERE o.cart_id = 16 AND s.business_id = 1);
              EXEC dbo.Submit_Feedback @s1, 'Lovely]: Could not find stored procedure 'dbo.Submit_Feedback'.
-                  - voucher used: expected Used but got NULL
                   - business rating updated: expected 4.00 but got 3.50
-                  - rider rating updated: error while evaluating [SELECT avg_rating FROM dbo.RiderPerformanceSummary WHERE rider_id = 12]: Invalid object name 'dbo.RiderPerformanceSummary'.
+                  - rider rating updated: expected 4.33 but got 4.50
                   - totals reconcile: error while evaluating [SELECT COUNT(*) FROM dbo.Reconcile_Order_Totals()]: Invalid object name 'dbo.Reconcile_Order_Totals'.
-PP-2        FAIL  New partner: register, business, product, approval, search and add to cart
-                  - partner: the call raised an error instead of returning 0 [dbo.Partner_Register 'Omar', NULL, 'Fawzy', 'omar.fawzy', 'Pass@025', 'omar.fawzy@mail.com', '01000000025', '1988-08-08']: Could not find stored procedure 'dbo.Partner_Register'.
-                  - business: expected return code 0 but got -1 [dbo.Register_Business 25, 'Fawzy Bakery', 'Fresh bread', NULL, 1, '00:00', '00:00', 20, '02200000025', 'Restaurant', 'Egyptian', 'Bakery', NULL]
-                  - product: expected return code 0 but got -1 [dbo.Upsert_Product 9, NULL, 'Baladi Bread', '5 loaves', 'Bakery', 10.00, 1]
-                  - listed as pending: expected 1 but got 0
-                  - product cannot be carted while pending: expected return code -4 but got -1 [dbo.Add_To_Cart 9, 21, 4, NULL]
-                  - approve: the call raised an error instead of returning 0 [dbo.Approve_Business 9, 2]: Could not find stored procedure 'dbo.Approve_Business'.
-                  - visible after approval: expected Fawzy Bakery but got NULL
-                  - add to cart: expected return code 0 but got -1 [dbo.Add_To_Cart 9, 21, 4, NULL]
-                  - in the cart: expected 4 but got NULL
+PP-2        PASS  New partner: register, business, product, approval, search and add to cart
 PP-3        FAIL  Cancel an order, get the voucher back and use it on a new order
-                  - voucher visible again: error while evaluating [SELECT COUNT(*) FROM dbo.ActiveVouchers WHERE voucher_id = 5]: Invalid object name 'dbo.ActiveVouchers'.
                   - totals reconcile: error while evaluating [SELECT COUNT(*) FROM dbo.Reconcile_Order_Totals()]: Invalid object name 'dbo.Reconcile_Order_Totals'.
-PP-4        FAIL  Blacklist a customer, see the effects on login and carts, and lift the blacklist
-                  - blacklist customer 17: the call raised an error instead of returning 0 [dbo.Blacklist_Customer 17, 1, 'Fraud ring']: Could not find stored procedure 'dbo.Blacklist_Customer'.
-                  - cannot log in: error while evaluating [SELECT dbo.CustomerLoginValidation('ahmed.salem', 'Pass@017')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.CustomerLoginValidation", or the name is ambiguous.
-                  - unused vouchers deleted: expected 0 but got 2
-                  - checkout blocked: expected return code -3 but got 0 [dbo.Checkout_Cart 9, NULL, 'Cash', NULL]
-                  - checkout blocked: the rejected call changed the database [dbo.Checkout_Cart 9, NULL, 'Cash', NULL]
-                  - other admin cannot lift: the call raised an error instead of returning -3 [dbo.Lift_Customer_Blacklist 17, 2]: Could not find stored procedure 'dbo.Lift_Customer_Blacklist'.
-                  - blacklisting admin lifts: the call raised an error instead of returning 0 [dbo.Lift_Customer_Blacklist 17, 1]: Could not find stored procedure 'dbo.Lift_Customer_Blacklist'.
-                  - can log in again: error while evaluating [SELECT dbo.CustomerLoginValidation('ahmed.salem', 'Pass@017')]: Cannot find either column "dbo" or the user-defined function or aggregate "dbo.CustomerLoginValidation", or the name is ambiguous.
-                  - checkout works again: expected return code 0 but got -4 [dbo.Checkout_Cart 9, NULL, 'Cash', NULL]
+PP-4        PASS  Blacklist a customer, see the effects on login and carts, and lift the blacklist
 
 ================================================================================
-PASSED 61 of 108 public tests.
+PASSED 91 of 108 public tests.
 Passing every public test does not guarantee full marks: the TAs also run private tests.
