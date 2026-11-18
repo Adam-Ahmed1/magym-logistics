@@ -47,9 +47,7 @@ PU-4.4.j-2  PASS  Blacklist_Customer returns -4 if already Blacklisted and -3 fo
 PU-4.4.k-1  PASS  Lift_Customer_Blacklist: the admin who blacklisted the customer lifts it
 PU-4.4.k-2  PASS  Lift_Customer_Blacklist returns -3 for any other admin, even a Super Admin
 PU-4.4.l    PASS  ZoneOrderReport for Maadi and New Cairo in September
-PU-4.4.m    FAIL  TopRiders ranks riders by deliveries delivered in the period
-                  - columns: cannot describe [SELECT * FROM dbo.TopRiders('2026-09-01', '2026-09-30')]: Invalid object name 'dbo.TopRiders'.
-                  - rows: error while running [SELECT * FROM dbo.TopRiders('2026-09-01', '2026-09-30')]: Invalid object name 'dbo.TopRiders'.
+PU-4.4.m    PASS  TopRiders ranks riders by deliveries delivered in the period
 PU-4.4.n    PASS  Daily_Revenue_Report splits a day by zone and business type
 PU-4.5.a-1  PASS  Register_Business creates a Pending restaurant with its phone and subtype row
 PU-4.5.a-2  PASS  Register_Business returns -2 for a partner who already owns a business and -1 for a Restaurant without food_category
@@ -63,9 +61,7 @@ PU-4.5.d-2  PASS  Toggle_Product_Status returns -4 when reactivating while the b
 PU-4.5.e-1  PASS  Set_Product_Promotion sets a discount amount and 0 removes it
 PU-4.5.e-2  PASS  Set_Product_Promotion returns -1 for a discount above 50% of the price or a negative one
 PU-4.5.f    PASS  BusinessSalesReport for Koshary El Tahrir in September
-PU-4.5.g    FAIL  BusinessFeedbackOverview with star breakdown
-                  - columns: cannot describe [SELECT * FROM dbo.BusinessFeedbackOverview(1)]: Invalid object name 'dbo.BusinessFeedbackOverview'.
-                  - rows: error while running [SELECT * FROM dbo.BusinessFeedbackOverview(1)]: Invalid object name 'dbo.BusinessFeedbackOverview'.
+PU-4.5.g    PASS  BusinessFeedbackOverview with star breakdown
 PU-4.6.a-1  PASS  Add_Customer_Address adds an address that becomes the only active one
 PU-4.6.a-2  PASS  Add_Customer_Address returns -1 for an empty description
 PU-4.6.b-1  PASS  Update_Delete_Customer_Address updates and deletes the customer's own addresses
@@ -87,77 +83,33 @@ PU-4.6.j-1  PASS  Cancel_Order cancels everything, refunds to the wallet and res
 PU-4.6.j-2  PASS  Cancel_Order returns -4 when a SubOrder was picked up, the order is Cancelled or Delivered
 PU-4.6.k-1  PASS  Reorder creates a new Active cart with the same items for the chosen address and makes it active
 PU-4.6.k-2  PASS  Reorder returns -3 (Blacklisted or not my address), -5 (zone differs) and -2 (address already has an Active cart)
-PU-4.6.l-1  FAIL  Submit_Feedback stores feedback for a Delivered SubOrder
-                  - feedback: the call raised an error instead of returning 0 [dbo.Submit_Feedback 2, 'Nice pizza', 'Arrived hot', 4]: Could not find stored procedure 'dbo.Submit_Feedback'.
-                  - stored: expected Nice pizza/4 but got NULL
-PU-4.6.l-2  FAIL  Submit_Feedback returns -2 for a second feedback, -4 for a SubOrder not delivered and -1 for a rating of 6
-                  - second feedback: the call raised an error instead of returning -2 [dbo.Submit_Feedback 1, 'Again', NULL, 5]: Could not find stored procedure 'dbo.Submit_Feedback'.
-                  - not delivered: the call raised an error instead of returning -4 [dbo.Submit_Feedback 9, 'Early', NULL, 5]: Could not find stored procedure 'dbo.Submit_Feedback'.
-                  - rating 6: the call raised an error instead of returning -1 [dbo.Submit_Feedback 2, 'Wow', NULL, 6]: Could not find stored procedure 'dbo.Submit_Feedback'.
-PU-4.6.m-1  FAIL  Rate_Rider stores the rider rating
-                  - rate: the call raised an error instead of returning 0 [dbo.Rate_Rider 4, 5]: Could not find stored procedure 'dbo.Rate_Rider'.
-                  - stored: expected 5 but got NULL
-PU-4.6.m-2  FAIL  Rate_Rider returns -2 for a second rating, -4 for a SubOrder not delivered and -1 for a rating of 0
-                  - second rating: the call raised an error instead of returning -2 [dbo.Rate_Rider 1, 3]: Could not find stored procedure 'dbo.Rate_Rider'.
-                  - not delivered: the call raised an error instead of returning -4 [dbo.Rate_Rider 9, 3]: Could not find stored procedure 'dbo.Rate_Rider'.
-                  - rating 0: the call raised an error instead of returning -1 [dbo.Rate_Rider 4, 0]: Could not find stored procedure 'dbo.Rate_Rider'.
+PU-4.6.l-1  PASS  Submit_Feedback stores feedback for a Delivered SubOrder
+PU-4.6.l-2  PASS  Submit_Feedback returns -2 for a second feedback, -4 for a SubOrder not delivered and -1 for a rating of 6
+PU-4.6.m-1  PASS  Rate_Rider stores the rider rating
+PU-4.6.m-2  PASS  Rate_Rider returns -2 for a second rating, -4 for a SubOrder not delivered and -1 for a rating of 0
 PU-4.6.n    PASS  My_Order_History lists all orders of the customer
 PU-4.6.o-1  PASS  Toggle_Favorite adds and then removes a product favorite
 PU-4.6.o-2  PASS  Toggle_Favorite removes an existing business favorite and returns -1 for an unknown item type
 PU-4.6.p    PASS  My_Favorites lists favorite products only, with is_orderable
-PU-4.6.q    FAIL  Recommended_Products: unseen products of ordered categories in the active address zone, most ordered category first
-                  - columns: cannot describe [SELECT * FROM dbo.Recommended_Products(17)]: Invalid object name 'dbo.Recommended_Products'.
-                  - rows: error while running [SELECT * FROM dbo.Recommended_Products(17)]: Invalid object name 'dbo.Recommended_Products'.
+PU-4.6.q    PASS  Recommended_Products: unseen products of ordered categories in the active address zone, most ordered category first
 PU-4.7.a    PASS  Set_Rider_Availability makes a rider available; -3 for a user who is not a rider
 PU-4.7.b    PASS  My_Active_Deliveries lists Assigned and Picked Up deliveries
-PU-4.7.c-1  FAIL  Mark_Picked_Up updates the delivery, the SubOrder and the order
-                  - pick up: the call raised an error instead of returning 0 [dbo.Mark_Picked_Up 11]: Could not find stored procedure 'dbo.Mark_Picked_Up'.
-                  - suborder: expected Picked Up but got Assigned
-                  - picked_up_at stamped: expected 1 but got 0
-                  - order: expected In Progress but got Placed
-PU-4.7.c-2  FAIL  Mark_Picked_Up returns -4 for Delivered, Cancelled and already Picked Up deliveries
-                  - delivered: the call raised an error instead of returning -4 [dbo.Mark_Picked_Up 1]: Could not find stored procedure 'dbo.Mark_Picked_Up'.
-                  - cancelled: the call raised an error instead of returning -4 [dbo.Mark_Picked_Up 6]: Could not find stored procedure 'dbo.Mark_Picked_Up'.
-                  - already picked up: the call raised an error instead of returning -4 [dbo.Mark_Picked_Up 9]: Could not find stored procedure 'dbo.Mark_Picked_Up'.
-PU-4.7.d-1  FAIL  Mark_Delivered stamps delivered_at, computes tracking_time and recomputes the order
-                  - deliver: the call raised an error instead of returning 0 [dbo.Mark_Delivered 9]: Could not find stored procedure 'dbo.Mark_Delivered'.
-                  - suborder: expected Delivered but got Picked Up
-                  - delivered_at stamped: expected 1 but got 0
-                  - tracking_time in minutes since pickup: expected 1 but got 0
-PU-4.7.d-2  FAIL  Mark_Delivered returns -4 for a delivery that was not picked up
-                  - assigned only: the call raised an error instead of returning -4 [dbo.Mark_Delivered 11]: Could not find stored procedure 'dbo.Mark_Delivered'.
-                  - already delivered: the call raised an error instead of returning -4 [dbo.Mark_Delivered 1]: Could not find stored procedure 'dbo.Mark_Delivered'.
-PU-4.7.e    FAIL  My_Earnings for September (80% of the fees of delivered deliveries)
-                  - columns: cannot describe [SELECT * FROM dbo.My_Earnings(12, '2026-09-01', '2026-09-30')]: Invalid object name 'dbo.My_Earnings'.
-                  - rows: error while running [SELECT * FROM dbo.My_Earnings(12, '2026-09-01', '2026-09-30')]: Invalid object name 'dbo.My_Earnings'.
-PU-4.7.f    FAIL  My_Rating_Summary with star breakdown
-                  - columns: cannot describe [SELECT * FROM dbo.My_Rating_Summary(12)]: Invalid object name 'dbo.My_Rating_Summary'.
-                  - rows: error while running [SELECT * FROM dbo.My_Rating_Summary(12)]: Invalid object name 'dbo.My_Rating_Summary'.
+PU-4.7.c-1  PASS  Mark_Picked_Up updates the delivery, the SubOrder and the order
+PU-4.7.c-2  PASS  Mark_Picked_Up returns -4 for Delivered, Cancelled and already Picked Up deliveries
+PU-4.7.d-1  PASS  Mark_Delivered stamps delivered_at, computes tracking_time and recomputes the order
+PU-4.7.d-2  PASS  Mark_Delivered returns -4 for a delivery that was not picked up
+PU-4.7.e    PASS  My_Earnings for September (80% of the fees of delivered deliveries)
+PU-4.7.f    PASS  My_Rating_Summary with star breakdown
 PU-4.7.g    PASS  My_Delivery_History lists Delivered and Cancelled deliveries assigned in the range
 PU-4.8.a    PASS  Search_Platform ranks Active businesses of the customer's active address zone by match type
-PU-4.8.b    FAIL  Reconcile_Order_Totals is empty on consistent data and reports tampered orders
-                  - columns: cannot describe [SELECT * FROM dbo.Reconcile_Order_Totals()]: Invalid object name 'dbo.Reconcile_Order_Totals'.
-                  - consistent seed: error while running [SELECT * FROM dbo.Reconcile_Order_Totals()]: Invalid object name 'dbo.Reconcile_Order_Totals'.
-                  - tampered: error while running [SELECT * FROM dbo.Reconcile_Order_Totals()]: Invalid object name 'dbo.Reconcile_Order_Totals'.
+PU-4.8.b    PASS  Reconcile_Order_Totals is empty on consistent data and reports tampered orders
 PU-4.8.c    PASS  Nearby_Businesses_By_Category for Desserts near a Maadi address
-PU-4.8.d    FAIL  Platform_Health_Snapshot on the seed data
-                  - columns: cannot describe [SELECT * FROM dbo.Platform_Health_Snapshot()]: Invalid object name 'dbo.Platform_Health_Snapshot'.
-                  - rows: error while running [SELECT * FROM dbo.Platform_Health_Snapshot()]: Invalid object name 'dbo.Platform_Health_Snapshot'.
-PP-1        FAIL  New customer: register, address, card, voucher, cart, checkout, delivery, feedback, rating
-                  - Unexpected error in [DECLARE @d1 INT = (SELECT d.delivery_id FROM dbo.Delivery d JOIN dbo.SubOrder s ON s.suborder_id = d.suborder_id JOIN dbo.Orders o ON o.order_id = s.order_id WHERE o.cart_id = 16 AND s.business_id = 1]: Could not find stored procedure 'dbo.Mark_Picked_Up'.
-                  - order in progress after one delivery: expected In Progress but got Placed
-                  - Unexpected error in [DECLARE @d3 INT = (SELECT d.delivery_id FROM dbo.Delivery d JOIN dbo.SubOrder s ON s.suborder_id = d.suborder_id JOIN dbo.Orders o ON o.order_id = s.order_id WHERE o.cart_id = 16 AND s.business_id = 3]: Could not find stored procedure 'dbo.Mark_Delivered'.
-                  - order delivered: expected Delivered but got Placed
-                  - Unexpected error in [DECLARE @s1 INT = (SELECT s.suborder_id FROM dbo.SubOrder s JOIN dbo.Orders o ON o.order_id = s.order_id WHERE o.cart_id = 16 AND s.business_id = 1);
-             EXEC dbo.Submit_Feedback @s1, 'Lovely]: Could not find stored procedure 'dbo.Submit_Feedback'.
-                  - business rating updated: expected 4.00 but got 3.50
-                  - rider rating updated: expected 4.33 but got 4.50
-                  - totals reconcile: error while evaluating [SELECT COUNT(*) FROM dbo.Reconcile_Order_Totals()]: Invalid object name 'dbo.Reconcile_Order_Totals'.
+PU-4.8.d    PASS  Platform_Health_Snapshot on the seed data
+PP-1        PASS  New customer: register, address, card, voucher, cart, checkout, delivery, feedback, rating
 PP-2        PASS  New partner: register, business, product, approval, search and add to cart
-PP-3        FAIL  Cancel an order, get the voucher back and use it on a new order
-                  - totals reconcile: error while evaluating [SELECT COUNT(*) FROM dbo.Reconcile_Order_Totals()]: Invalid object name 'dbo.Reconcile_Order_Totals'.
+PP-3        PASS  Cancel an order, get the voucher back and use it on a new order
 PP-4        PASS  Blacklist a customer, see the effects on login and carts, and lift the blacklist
 
 ================================================================================
-PASSED 91 of 108 public tests.
+PASSED 108 of 108 public tests.
 Passing every public test does not guarantee full marks: the TAs also run private tests.

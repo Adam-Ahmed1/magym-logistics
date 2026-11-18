@@ -1587,6 +1587,28 @@ RETURN
 GO
 
 -- 4.4.m - TopRiders (placeholder)
+-- Maryam Mustafa 64-3003
+CREATE FUNCTION dbo.TopRiders (@from_date date, @to_date date)
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT TOP 5
+           ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC, r.rider_id ASC) AS rider_rank,
+           r.rider_id,
+           u.first_name + ' ' + u.last_name AS rider_name,
+           COUNT(*) AS completed_delivery_count
+    FROM dbo.Rider AS r
+    INNER JOIN dbo.Users AS u ON u.user_id = r.rider_id
+    INNER JOIN dbo.Delivery AS d ON d.rider_id = r.rider_id
+    INNER JOIN dbo.SubOrder AS s ON s.suborder_id = d.suborder_id
+    WHERE s.status = 'Delivered'
+      AND CAST(d.delivered_at AS date) BETWEEN @from_date AND @to_date
+    GROUP BY r.rider_id, u.first_name, u.last_name
+    ORDER BY rider_rank
+);
+GO
+
 
 -- 4.4.n - Daily_Revenue_Report
 -- mohamed mostafa hassan mohamed - 65-33784
@@ -2056,6 +2078,24 @@ RETURN
 GO
 
 -- 4.5.g - BusinessFeedbackOverview (placeholder)
+-- Maryam Mustafa Abdelwahab - 64-3003
+GO
+CREATE FUNCTION dbo.BusinessFeedbackOverview (@business_id int)
+RETURNS TABLE
+AS
+RETURN
+(
+  SELECT CAST(AVG(CAST(f.rating AS decimal(10,2))) as decimal (10,2)) AS avg_rating, 
+  COUNT(*) AS number_of_feedbacks, COUNT(CASE WHEN f.rating=5 THEN 1 END) AS five_star,
+  COUNT(CASE WHEN f.rating = 4 THEN 1 END) AS four_star,
+           COUNT(CASE WHEN f.rating = 3 THEN 1 END) AS three_star,
+           COUNT(CASE WHEN f.rating = 2 THEN 1 END) AS two_star,
+           COUNT(CASE WHEN f.rating = 1 THEN 1 END) AS one_star
+    FROM dbo.Feedback AS f
+    INNER JOIN dbo.SubOrder AS s ON s.suborder_id=f.suborder_id
+    where s.business_id=@business_id
+    HAVING EXISTS (SELECT 1 FROM dbo.Business WHERE business_id=@business_id));
+GO
 
 -- 4.6.a - Add_Customer_Address
 GO
@@ -2703,8 +2743,69 @@ END
 GO
 
 -- 4.6.l - Submit_Feedback (placeholder)
+-- Maryam Mustafa -64-3003
+GO
+CREATE PROC dbo.Submit_Feedback
+@suborder_id int,
+@headline varchar(100),
+@description varchar(5000),
+@rating int
+AS
+BEGIN
+    IF @suborder_id IS NULL OR @headline IS NULL OR LTRIM(RTRIM(@headline)) = ''
+       OR @rating IS NULL OR @rating NOT BETWEEN 1 AND 5
+        RETURN -1;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.SubOrder
+                   WHERE suborder_id = @suborder_id AND status = 'Delivered')
+        RETURN -4;
+
+    IF EXISTS (SELECT 1 FROM dbo.Feedback WHERE suborder_id = @suborder_id)
+        RETURN -2;
+
+    BEGIN TRY
+        INSERT INTO dbo.Feedback (headline, description, rating, feedback_date, suborder_id)
+        VALUES (@headline, @description, @rating, GETDATE(), @suborder_id);
+
+        RETURN 0;
+    END TRY
+    BEGIN CATCH
+        RETURN -1;
+    END CATCH;
+END;
+GO
 
 -- 4.6.m - Rate_Rider (placeholder)
+-- Maryam Mustafa 64-3003
+GO
+CREATE PROCEDURE dbo.Rate_Rider
+    @suborder_id int,
+    @rider_rating int
+AS
+BEGIN
+    IF @suborder_id IS NULL OR @rider_rating IS NULL OR @rider_rating NOT BETWEEN 1 AND 5
+        RETURN -1;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.SubOrder
+                   WHERE suborder_id = @suborder_id AND status = 'Delivered')
+        RETURN -4;
+
+    IF EXISTS (SELECT 1 FROM dbo.Delivery
+               WHERE suborder_id = @suborder_id AND rider_rating IS NOT NULL)
+        RETURN -2;
+
+    BEGIN TRY
+        UPDATE dbo.Delivery
+        SET rider_rating = @rider_rating
+        WHERE suborder_id = @suborder_id;
+
+        RETURN 0;
+    END TRY
+    BEGIN CATCH
+        RETURN -1;
+    END CATCH;
+END;
+GO
 
 -- 4.6.n - My_Order_History
 --yehia tamer mohamed 64-1694
@@ -2826,10 +2927,31 @@ RETURN
 GO
 
 -- 4.6.q - Recommended_Products (placeholder)
+-- Maryam Mustafa AbdelWahab - 64-3003
+GO
+CREATE FUNCTION dbo.Recommended_Products (@customer_id INT)
+RETURNS TABLE
+AS 
+RETURN
+(
+    SELECT TOP 10 p.product_id,p.name AS product_name,b.name AS business_name, p.category, p.price-p.discount_amount AS final_price FROM Product p
+    INNER JOIN Business b ON b.business_id=p.business_id
+    INNER JOIN (SELECT p.category,COUNT(ca.product_id) AS times_ordered FROM CartItem ca
+    INNER JOIN Cart c ON c.cart_id=ca.cart_id
+    INNER JOIN Orders o ON o.cart_id=c.cart_id
+    INNER JOIN Product p ON p.product_id=ca.product_id
+    WHERE c.customer_id=@customer_id
+    GROUP BY p.category) oc ON oc.category=p.category
+    WHERE p.is_available=1
+    AND b.status='Active' AND b.zone_id=(SELECT zone_id FROM Address WHERE customer_id=@customer_id AND is_active=1)
+    AND NOT EXISTS (SELECT * FROM CartItem ci2 INNER JOIN Cart c2 ON c2.cart_id=ci2.cart_id INNER JOIN Orders o2 ON o2.cart_id=c2.cart_id
+    WHERE c2.customer_id=@customer_id AND ci2.product_id=p.product_id)
+    ORDER BY oc.times_ordered DESC, p.product_id
+);
+GO
 
 -- 4.7.a - Set_Rider_Availability
-GO
--- Maryam Mustafa AbdelWahab - 64-3003
+-- Maryam Mustafa AbdelWahab 64-3003
 CREATE PROC dbo.Set_Rider_Availability
 @rider_id INT,
 @is_available BIT
@@ -2844,12 +2966,13 @@ BEGIN
         SET is_available = @is_available
         WHERE rider_id = @rider_id;
         RETURN 0;
-  END TRY
-  BEGIN CATCH 
-  RETURN -1;
-  END CATCH;
+   END TRY
+   BEGIN CATCH 
+   RETURN -1;
+   END CATCH;
 END;
 GO
+
 
 -- 4.7.b - My_Active_Deliveries
 -- Maryam Mustafa AbdelWahab - 64-3003 
@@ -2872,12 +2995,128 @@ WHERE d.rider_id=@rider_int AND s.status IN ('Assigned', 'Picked Up'));
 GO
 
 -- 4.7.c - Mark_Picked_Up (placeholder)
+-- Maryam Mustafa - 64-3003
+GO
+CREATE PROCEDURE dbo.Mark_Picked_Up
+@delivery_id int 
+AS
+BEGIN
+    IF @delivery_id IS NULL
+        RETURN -1;
+
+    IF NOT EXISTS (SELECT * FROM Delivery WHERE delivery_id = @delivery_id)
+        RETURN -1;
+
+    IF (SELECT SubOrder.status FROM Delivery INNER JOIN SubOrder ON SubOrder.suborder_id = Delivery.suborder_id WHERE delivery_id = @delivery_id) IN ('Delivered', 'Cancelled', 'Picked Up')
+        RETURN -4;
+
+    DECLARE @order_id INT;
+
+    SELECT @order_id = s.order_id FROM SubOrder s INNER JOIN Delivery d ON s.suborder_id = d.suborder_id WHERE d.delivery_id = @delivery_id;
+
+    BEGIN TRY
+        UPDATE SubOrder SET status='Picked Up' WHERE suborder_id=(SELECT suborder_id FROM Delivery WHERE delivery_id=@delivery_id);
+        UPDATE Orders SET status='In Progress' WHERE order_id=@order_id;
+        UPDATE Delivery SET picked_up_at=GETDATE() WHERE delivery_id=@delivery_id;
+        RETURN 0;
+    END TRY
+    BEGIN CATCH
+        RETURN -1;
+    END CATCH;
+
+END
+GO
 
 -- 4.7.d - Mark_Delivered (placeholder)
+-- Maryam Mustafa -64-3003
+CREATE PROCEDURE dbo.Mark_Delivered
+    @delivery_id int
+AS
+BEGIN
+    IF @delivery_id IS NULL
+        RETURN -1;
+
+    IF NOT EXISTS(SELECT * FROM Delivery WHERE delivery_id=@delivery_id)
+        RETURN -1;
+
+    DECLARE @suborder_id int, @order_id int;
+    DECLARE @now datetime = GETDATE();
+
+    SELECT @suborder_id = s.suborder_id,
+           @order_id = s.order_id
+    FROM dbo.Delivery AS d
+    INNER JOIN dbo.SubOrder AS s ON s.suborder_id = d.suborder_id
+    WHERE d.delivery_id = @delivery_id
+      AND s.status = 'Picked Up';
+
+    IF @suborder_id IS NULL
+        RETURN -4;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        UPDATE dbo.Delivery
+        SET delivered_at = @now,
+            tracking_time = DATEDIFF(MINUTE, picked_up_at, @now)
+        WHERE delivery_id = @delivery_id;
+
+        UPDATE dbo.SubOrder
+        SET status = 'Delivered'
+        WHERE suborder_id = @suborder_id;
+
+        IF NOT EXISTS(SELECT * FROM SubOrder WHERE order_id = @order_id AND status IN ('Placed', 'Assigned', 'Picked Up'))
+            UPDATE Orders SET status='Delivered' WHERE order_id=@order_id;
+        ELSE
+            UPDATE Orders SET status='In Progress' WHERE order_id=@order_id;
+
+        COMMIT TRANSACTION;
+        RETURN 0;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        RETURN -1;
+    END CATCH;
+END;
+GO
 
 -- 4.7.e - My_Earnings (placeholder)
+-- Maryam Mustafa Abdelwahab - 64-3003
+CREATE FUNCTION dbo.My_Earnings (@rider_id int, @from_date date, @to_date date)
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT COUNT(*) AS completed_deliveries,
+           CAST(ISNULL(SUM(s.delivery_fee), 0) AS decimal(10,2)) AS total_delivery_fees,
+           CAST(ISNULL(SUM(s.delivery_fee), 0) * 0.80 AS decimal(10,2)) AS total_earnings
+    FROM dbo.Delivery AS d
+    INNER JOIN dbo.SubOrder AS s ON s.suborder_id = d.suborder_id
+    WHERE d.rider_id = @rider_id
+      AND s.status = 'Delivered'
+      AND CAST(d.delivered_at AS date) BETWEEN @from_date AND @to_date
+    HAVING EXISTS (SELECT 1 FROM dbo.Rider WHERE rider_id = @rider_id)
+       AND @from_date <= @to_date
+);
+GO
 
 -- 4.7.f - My_Rating_Summary (placeholder)
+-- Maryam Mustafa Abdelwahab - 64-3003
+CREATE FUNCTION dbo.My_Rating_Summary(@rider_id INT)
+RETURNS TABLE
+AS
+RETURN
+(  SELECT CAST(AVG(CAST(d.rider_rating AS decimal(10,2))) AS decimal(10,2)) AS avg_rating, COUNT(d.rider_rating) AS ratings_count,
+COUNT(CASE WHEN d.rider_rating = 5 THEN 1 END) AS five_star,
+           COUNT(CASE WHEN d.rider_rating = 4 THEN 1 END) AS four_star,
+           COUNT(CASE WHEN d.rider_rating = 3 THEN 1 END) AS three_star,
+           COUNT(CASE WHEN d.rider_rating = 2 THEN 1 END) AS two_star,
+           COUNT(CASE WHEN d.rider_rating = 1 THEN 1 END) AS one_star
+    FROM dbo.Delivery AS d
+    WHERE d.rider_id = @rider_id
+    HAVING EXISTS (SELECT 1 FROM dbo.Rider WHERE rider_id = @rider_id)
+);
+GO
 
 -- 4.7.g - My_Delivery_History
 -- Maryam Mustafa Abdelwahab - 64-3003
@@ -2944,6 +3183,19 @@ GO
 
 
 -- 4.8.b - Reconcile_Order_Totals (placeholder)
+-- Maryam Mustafa Abdelwahab - 64-3003
+CREATE FUNCTION dbo.Reconcile_Order_Totals()
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT o.order_id,SUM(s.total_price+s.delivery_fee)-o.discount_amount AS expected_total,o.total_amount AS order_total,p.amount AS payment_amount FROM Orders o
+    INNER JOIN SubOrder s ON s.order_id = o.order_id
+    LEFT OUTER JOIN Payment p ON p.order_id=o.order_id
+    GROUP BY o.order_id,o.total_amount,o.discount_amount,p.amount
+    HAVING p.amount<>o.total_amount OR p.amount IS NULL OR SUM(s.total_price+s.delivery_fee)-o.discount_amount<>o.total_amount
+);
+GO
 
 -- 4.8.c - Nearby_Businesses_By_Category
 -- Adam Ahmed Ibrahim - 65-33775
@@ -2983,3 +3235,24 @@ RETURN
 GO
 
 -- 4.8.d - Platform_Health_Snapshot (placeholder)
+--Maryam Mustafa Abdelwahab -64-3003
+CREATE FUNCTION dbo.Platform_Health_Snapshot ()
+RETURNS TABLE
+AS
+RETURN
+(
+    SELECT
+        (SELECT COUNT(*) FROM dbo.Business WHERE status = 'Active') AS active_businesses,
+        (SELECT COUNT(*) FROM dbo.Rider WHERE is_available = 1) AS available_riders,
+        (SELECT COUNT(*) FROM dbo.Orders
+         WHERE CAST(order_date AS date) = CAST(GETDATE() AS date)) AS orders_today,
+        (SELECT CAST(AVG(CAST(tracking_time AS decimal(10,2))) AS decimal(10,2))
+         FROM dbo.Delivery
+         WHERE CAST(delivered_at AS date) = CAST(GETDATE() AS date)) AS avg_delivery_time_today,
+        (SELECT COUNT(*) FROM dbo.Feedback
+         WHERE rating <= 2
+           AND CAST(feedback_date AS date) = CAST(GETDATE() AS date)) AS low_ratings_today
+);
+GO
+
+
