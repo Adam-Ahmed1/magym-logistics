@@ -1642,11 +1642,11 @@ BEGIN
     RETURN -1;
 
     IF @business_type = 'Restaurant'
-        AND (@cuisine_type IS NULL OR @food_category IS NULL)
+        AND (@cuisine_type IS NULL OR @food_category IS NULL OR @pharmacy_type IS NOT NULL)
     RETURN -1;
 
     IF @business_type = 'Pharmacy'
-        AND (@pharmacy_type IS NULL)
+        AND (@cuisine_type IS NOT NULL OR @food_category IS NOT NULL OR @pharmacy_type IS NULL)
     RETURN -1;
 
     DECLARE @business_id INT;
@@ -2694,7 +2694,7 @@ GO
 CREATE PROC dbo.Submit_Feedback
 @suborder_id int,
 @headline varchar(100),
-@description varchar(5000),
+@description varchar(500),
 @rating int
 AS
 BEGIN
