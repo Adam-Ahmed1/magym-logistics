@@ -1,7 +1,9 @@
+-- 4.1.a - LocalDeliveryMarketplace_Team_44
 CREATE DATABASE LocalDeliveryMarketplace_Team_44;
 GO
 USE LocalDeliveryMarketplace_Team_44;
 GO
+-- 4.1.b - createAllTables
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE PROCEDURE dbo.createAllTables
 AS
@@ -309,6 +311,7 @@ GO
 EXEC dbo.createAllTables;
 GO
 
+-- 4.1.c - dropAllTables
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE PROCEDURE dbo.dropAllTables
 AS
@@ -356,6 +359,7 @@ BEGIN
 END;
 GO
 
+-- 4.1.d - dropAllProceduresFunctionsViews
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE PROCEDURE dbo.dropAllProceduresFunctionsViews
 AS
@@ -444,6 +448,7 @@ BEGIN
 END;
 GO
 
+-- 4.1.e - clearAllTables
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE PROCEDURE dbo.clearAllTables
 AS
@@ -491,6 +496,7 @@ BEGIN
     RETURN 'Pharmacy';
 END
 
+-- 4.2.a - allBusinessProfiles
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE VIEW dbo.allBusinessProfiles
@@ -510,6 +516,7 @@ AS
     INNER JOIN [Zone] Z ON Z.zone_id = B.zone_id;
 GO
 
+-- 4.2.b - BusinessesPerZone
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE VIEW dbo.BusinessesPerZone
 AS
@@ -519,6 +526,7 @@ LEFT JOIN dbo.Business b ON b.zone_id = z.zone_id AND b.status = 'Active'
 GROUP BY z.zone_id, z.zone_name;
 GO
 
+-- 4.2.c - BusinessRatingsSummary
 GO
 --Maryam Mustafa Abdelwahab- 64-3003
 CREATE VIEW dbo.BusinessRatingsSummary
@@ -532,6 +540,7 @@ LEFT JOIN dbo.Feedback AS f ON f.suborder_id = s.suborder_id
 GROUP BY b.business_id, b.name;
 GO
 
+-- 4.2.d - ActiveVouchers (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE VIEW dbo.ActiveVouchers
 AS
@@ -541,6 +550,7 @@ WHERE status = 'Unused'
 AND expiry_date >= CAST(GETDATE() AS date);
 GO
 
+-- 4.2.e - PendingBusinessApprovals
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE VIEW dbo.PendingBusinessApprovals
@@ -558,6 +568,7 @@ AS
     WHERE B.[status] = 'Pending'
 GO
 
+-- 4.2.f - RiderPerformanceSummary
 -- Maryam Mustafa Abdelwahab - 64-3003
 CREATE VIEW dbo.RiderPerformanceSummary
 AS 
@@ -572,6 +583,7 @@ LEFT JOIN dbo.SubOrder AS s ON s.suborder_id=d.suborder_id
 GROUP BY r.rider_id,u.first_name,u.last_name,r.zone_id,z.zone_name;
 GO
 
+-- 4.2.g - TopSellingProducts
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE VIEW dbo.TopSellingProducts
@@ -598,6 +610,7 @@ GROUP BY
 ORDER BY units_sold DESC, CI.product_id ASC
 GO
 
+-- 4.2.h - ZoneDeliveryPerformance
 -- Maryam Mustafa Abdelwahab - 64-3003
 CREATE VIEW dbo.ZoneDeliveryPerformance
 AS
@@ -612,6 +625,7 @@ AS  dd ON dd.zone_id=z.zone_id
 GROUP BY z.zone_id,z.zone_name;
 GO
 
+-- 4.3.a - Customer_Register (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE PROCEDURE dbo.Customer_Register
 @first_name varchar(30), @middle_name varchar(30), @last_name varchar(30),
@@ -660,6 +674,7 @@ BEGIN
 END;
 GO
 
+-- 4.3.b - Partner_Register (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE PROCEDURE dbo.Partner_Register
 @first_name varchar(30), @middle_name varchar(30), @last_name varchar(30),
@@ -708,6 +723,7 @@ BEGIN
 END;
 GO
 
+-- 4.3.c - Rider_Register (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE PROCEDURE dbo.Rider_Register
     @first_name varchar(30),
@@ -775,6 +791,7 @@ BEGIN
 END;
 GO
 
+-- 4.3.d - CustomerLoginValidation (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE FUNCTION dbo.CustomerLoginValidation
 (@username varchar(30), @password varchar(30))
@@ -796,6 +813,7 @@ BEGIN
 END;
 GO
 
+-- 4.3.e - PartnerLoginValidation (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE FUNCTION dbo.PartnerLoginValidation
 (@username varchar(30), @password varchar(30))
@@ -817,6 +835,7 @@ BEGIN
 END;
 GO
 
+-- 4.3.f - RiderLoginValidation (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE FUNCTION dbo.RiderLoginValidation
 (
@@ -843,6 +862,7 @@ BEGIN
 END;
 GO
 
+-- 4.3.g - AdminLoginValidation (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE FUNCTION dbo.AdminLoginValidation
 (
@@ -869,6 +889,7 @@ BEGIN
 END;
 GO
 
+-- 4.3.h - Change_Password (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE PROCEDURE dbo.Change_Password
     @user_id int,
@@ -917,6 +938,7 @@ END;
 GO
 
 
+-- 4.4.a - Create_Admin (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE PROCEDURE dbo.Create_Admin
     @first_name varchar(30),
@@ -995,6 +1017,7 @@ BEGIN
 END;
 GO
 
+-- 4.4.b - Approve_Business (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE PROCEDURE dbo.Approve_Business
     @business_id int,
@@ -1047,6 +1070,7 @@ BEGIN
 END;
 GO
 
+-- 4.4.c - Reject_Business (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE PROCEDURE dbo.Reject_Business
     @business_id int,
@@ -1118,6 +1142,7 @@ WHERE s.business_id = @business_id AND s.status IN ('Placed', 'Assigned')
 );
 GO
 
+-- 4.4.d - Suspend_Business
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE PROCEDURE dbo.Suspend_Business
 @business_id int, @admin_id int, @reason varchar(255)
@@ -1209,6 +1234,7 @@ BEGIN
 END;
 GO
 
+-- 4.4.e - Reinstate_Business
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE PROCEDURE dbo.Reinstate_Business
 @business_id int, @super_admin_id int
@@ -1232,6 +1258,7 @@ BEGIN
 END;
 GO
 
+-- 4.4.f - Create_Zone
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE PROCEDURE dbo.Create_Zone
 @zone_name varchar(50), @delivery_fee decimal(10,2), @super_admin_id int
@@ -1254,6 +1281,7 @@ BEGIN
 END;
 GO
 
+-- 4.4.g - Update_Zone_Fee
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE PROCEDURE dbo.Update_Zone_Fee
 @zone_id int, @new_fee decimal(10,2), @super_admin_id int
@@ -1273,6 +1301,7 @@ BEGIN
 END;
 GO
 
+-- 4.4.h - Assign_Admin_Zone (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE PROCEDURE dbo.Assign_Admin_Zone
     @admin_id int,
@@ -1321,6 +1350,7 @@ BEGIN
     RETURN 0;
 END;
 GO
+-- 4.4.i - Issue_Voucher (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE PROCEDURE dbo.Issue_Voucher
     @customer_id int,
@@ -1393,6 +1423,7 @@ BEGIN
 END;
 GO
 
+-- 4.4.j - Blacklist_Customer (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE PROCEDURE dbo.Blacklist_Customer
 @customer_id int, @admin_id int, @reason varchar(255)
@@ -1470,6 +1501,7 @@ BEGIN
 END;
 GO
 
+-- 4.4.k - Lift_Customer_Blacklist (placeholder)
 -- Gelan Ahmed 64-1998
 CREATE PROCEDURE dbo.Lift_Customer_Blacklist
     @customer_id int,
@@ -1531,6 +1563,7 @@ BEGIN
     END CATCH;
 END;
 GO
+-- 4.4.l - ZoneOrderReport
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE FUNCTION dbo.ZoneOrderReport(@zone_id int, @from_date date, @to_date date)
 RETURNS TABLE
@@ -1553,6 +1586,7 @@ RETURN
 );
 GO
 
+-- 4.4.m - TopRiders (placeholder)
 -- Maryam Mustafa 64-3003
 CREATE FUNCTION dbo.TopRiders (@from_date date, @to_date date)
 RETURNS TABLE
@@ -1576,6 +1610,7 @@ RETURN
 GO
 
 
+-- 4.4.n - Daily_Revenue_Report
 -- mohamed mostafa hassan mohamed - 65-33784
 CREATE FUNCTION dbo.Daily_Revenue_Report(@report_date date)
 RETURNS TABLE
@@ -1609,6 +1644,7 @@ RETURN
 );
 GO
 
+-- 4.5.a - Register_Business
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE PROCEDURE dbo.Register_Business
@@ -1773,6 +1809,7 @@ BEGIN
 END
 GO
 
+-- 4.5.b - Update_Business_Info
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE PROCEDURE dbo.Update_Business_Info
@@ -1828,6 +1865,7 @@ BEGIN
 END
 GO
 
+-- 4.5.c - Upsert_Product
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE PROCEDURE dbo.Upsert_Product
@@ -1934,6 +1972,7 @@ BEGIN
 END
 GO
 
+-- 4.5.d - Toggle_Product_Status
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE PROCEDURE Toggle_Product_Status
@@ -1971,6 +2010,7 @@ BEGIN
 END
 GO
 
+-- 4.5.e - Set_Product_Promotion
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE PROCEDURE dbo.Set_Product_Promotion
@@ -2007,6 +2047,7 @@ BEGIN
 END
 GO
 
+-- 4.5.f - BusinessSalesReport
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE FUNCTION BusinessSalesReport(@business_id INT, @from_date DATE, @to_date DATE)
@@ -2036,6 +2077,7 @@ RETURN
 )
 GO
 
+-- 4.5.g - BusinessFeedbackOverview (placeholder)
 -- Maryam Mustafa Abdelwahab - 64-3003
 GO
 CREATE FUNCTION dbo.BusinessFeedbackOverview (@business_id int)
@@ -2055,6 +2097,7 @@ RETURN
     HAVING EXISTS (SELECT 1 FROM dbo.Business WHERE business_id=@business_id));
 GO
 
+-- 4.6.a - Add_Customer_Address
 GO
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Add_Customer_Address 
@@ -2089,6 +2132,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.b - Update_Delete_Customer_Address
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Update_Delete_Customer_Address 
 @customer_id INT, @address_id INT, @description VARCHAR(150), @zone_id INT, @action VARCHAR(20)
@@ -2149,6 +2193,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.c - Change_Active_Address
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Change_Active_Address
 @customer_id INT, @new_address_id INT
@@ -2179,6 +2224,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.d - Add_Card
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Add_Card
 @customer_id INT, @card_no CHAR(16), @card_holder_name VARCHAR(100), @expiration_date DATE
@@ -2205,6 +2251,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.e - Create_Cart
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Create_Cart 
 @customer_id INT
@@ -2235,6 +2282,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.f - Add_To_Cart
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Add_To_Cart
 @cart_id INT, @product_id INT, @quantity INT, @notes VARCHAR(255)
@@ -2303,6 +2351,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.g - Remove_From_Cart
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Remove_From_Cart
 @cart_id INT, @product_id INT
@@ -2330,6 +2379,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.h - Calculate_Voucher_Discount
 --yehia tamer mohamed 64-1694
 CREATE FUNCTION dbo.Calculate_Voucher_Discount (@voucher_id INT,@order_subtotal DECIMAL(10,2))
 RETURNS DECIMAL(10,2)
@@ -2364,6 +2414,7 @@ AS BEGIN
     RETURN @amount;
 END
 GO
+-- 4.6.i - Checkout_Cart
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Checkout_Cart
 @cart_id INT, @voucher_id INT, @payment_method VARCHAR(20), @card_id INT
@@ -2550,6 +2601,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.j - Cancel_Order
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Cancel_Order
 @order_id INT
@@ -2612,6 +2664,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.k - Reorder
 --yehia tamer mohamed 64-1694
 CREATE PROCEDURE Reorder
 @order_id INT,@address_id INT
@@ -2689,6 +2742,7 @@ AS BEGIN
 END
 GO
 
+-- 4.6.l - Submit_Feedback (placeholder)
 -- Maryam Mustafa -64-3003
 GO
 CREATE PROC dbo.Submit_Feedback
@@ -2721,6 +2775,7 @@ BEGIN
 END;
 GO
 
+-- 4.6.m - Rate_Rider (placeholder)
 -- Maryam Mustafa 64-3003
 GO
 CREATE PROCEDURE dbo.Rate_Rider
@@ -2752,6 +2807,7 @@ BEGIN
 END;
 GO
 
+-- 4.6.n - My_Order_History
 --yehia tamer mohamed 64-1694
 CREATE FUNCTION My_Order_History (@customer_id INT)
 RETURNS TABLE
@@ -2767,6 +2823,7 @@ AS RETURN(
 GO
 
 
+-- 4.6.o - Toggle_Favorite
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE PROCEDURE Toggle_Favorite
@@ -2844,6 +2901,7 @@ BEGIN
 END
 GO
 
+-- 4.6.p - My_Favorites
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE FUNCTION My_Favorites(@customer_id INT)
@@ -2868,6 +2926,7 @@ RETURN
 );
 GO
 
+-- 4.6.q - Recommended_Products (placeholder)
 -- Maryam Mustafa AbdelWahab - 64-3003
 GO
 CREATE FUNCTION dbo.Recommended_Products (@customer_id INT)
@@ -2891,6 +2950,7 @@ RETURN
 );
 GO
 
+-- 4.7.a - Set_Rider_Availability
 -- Maryam Mustafa AbdelWahab 64-3003
 CREATE PROC dbo.Set_Rider_Availability
 @rider_id INT,
@@ -2914,6 +2974,7 @@ END;
 GO
 
 
+-- 4.7.b - My_Active_Deliveries
 -- Maryam Mustafa AbdelWahab - 64-3003 
 CREATE FUNCTION dbo.My_Active_Deliveries(@rider_int int)
 RETURNS TABLE
@@ -2933,6 +2994,7 @@ INNER JOIN dbo.Users AS u ON u.user_id=c.customer_id
 WHERE d.rider_id=@rider_int AND s.status IN ('Assigned', 'Picked Up'));
 GO
 
+-- 4.7.c - Mark_Picked_Up (placeholder)
 -- Maryam Mustafa - 64-3003
 GO
 CREATE PROCEDURE dbo.Mark_Picked_Up
@@ -2965,6 +3027,7 @@ BEGIN
 END
 GO
 
+-- 4.7.d - Mark_Delivered (placeholder)
 -- Maryam Mustafa -64-3003
 CREATE PROCEDURE dbo.Mark_Delivered
     @delivery_id int
@@ -3017,6 +3080,7 @@ BEGIN
 END;
 GO
 
+-- 4.7.e - My_Earnings (placeholder)
 -- Maryam Mustafa Abdelwahab - 64-3003
 CREATE FUNCTION dbo.My_Earnings (@rider_id int, @from_date date, @to_date date)
 RETURNS TABLE
@@ -3036,6 +3100,7 @@ RETURN
 );
 GO
 
+-- 4.7.f - My_Rating_Summary (placeholder)
 -- Maryam Mustafa Abdelwahab - 64-3003
 CREATE FUNCTION dbo.My_Rating_Summary(@rider_id INT)
 RETURNS TABLE
@@ -3053,6 +3118,7 @@ COUNT(CASE WHEN d.rider_rating = 5 THEN 1 END) AS five_star,
 );
 GO
 
+-- 4.7.g - My_Delivery_History
 -- Maryam Mustafa Abdelwahab - 64-3003
 CREATE FUNCTION dbo.My_Delivery_History(@rider_id int , @from_date date , @to_date date)
 RETURNS TABLE
@@ -3093,6 +3159,7 @@ BEGIN
 END
 GO
 
+-- 4.8.a - Search_Platform
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE FUNCTION dbo.Search_Platform(@customer_id INT, @keyword VARCHAR(100))
@@ -3115,6 +3182,7 @@ RETURN
 GO
 
 
+-- 4.8.b - Reconcile_Order_Totals (placeholder)
 -- Maryam Mustafa Abdelwahab - 64-3003
 CREATE FUNCTION dbo.Reconcile_Order_Totals()
 RETURNS TABLE
@@ -3129,6 +3197,7 @@ RETURN
 );
 GO
 
+-- 4.8.c - Nearby_Businesses_By_Category
 -- Adam Ahmed Ibrahim - 65-33775
 GO
 CREATE FUNCTION Nearby_Businesses_By_Category(@address_id INT, @product_category VARCHAR(50))
@@ -3165,6 +3234,7 @@ RETURN
 );
 GO
 
+-- 4.8.d - Platform_Health_Snapshot (placeholder)
 --Maryam Mustafa Abdelwahab -64-3003
 CREATE FUNCTION dbo.Platform_Health_Snapshot ()
 RETURNS TABLE
@@ -3184,5 +3254,3 @@ RETURN
            AND CAST(feedback_date AS date) = CAST(GETDATE() AS date)) AS low_ratings_today
 );
 GO
-
-
