@@ -1289,14 +1289,31 @@ BEGIN
 
     IF NOT EXISTS (
         SELECT 1
+        FROM dbo.Users
+        WHERE [user_id] = @super_admin_id
+    ) 
+    RETURN -1;
+
+    IF NOT EXISTS (
+        SELECT 1
         FROM dbo.Admin
         WHERE admin_id = @super_admin_id
-    ) OR NOT EXISTS (
+    ) 
+    RETURN -3;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM dbo.Users
+        WHERE [user_id] = @admin_id
+    ) 
+    RETURN -1;
+
+    IF NOT EXISTS (
         SELECT 1
         FROM dbo.Admin
         WHERE admin_id = @admin_id
     )
-    RETURN -1;
+    RETURN -3;
 
     IF EXISTS (
         SELECT 1
@@ -1314,11 +1331,23 @@ BEGIN
     )
     RETURN -1;
 
-    UPDATE dbo.Admin
-    SET zone_id = @zone_id
-    WHERE admin_id = @admin_id;
+    IF NOT EXISTS (
+        SELECT 1
+        FROM dbo.[Zone]
+        WHERE zone_id = @zone_id
+    )
+    RETURN -1;
 
-    RETURN 0;
+    BEGIN TRY
+        UPDATE dbo.Admin
+        SET zone_id = @zone_id
+        WHERE admin_id = @admin_id;
+
+        RETURN 0;
+    END TRY
+    BEGIN CATCH
+        RETURN -1;
+    END CATCH;
 END;
 GO
 -- Gelan Ahmed 64-1998
@@ -1346,12 +1375,15 @@ BEGIN
     IF @expiry_date < CAST(GETDATE() AS date)
         RETURN -1;
 
+    IF NOT EXISTS (SELECT 1 FROM dbo.Users WHERE [user_id] = @customer_id)
+    RETURN -1;
+
     IF NOT EXISTS (
         SELECT 1
         FROM dbo.Customer
         WHERE customer_id = @customer_id
     )
-        RETURN -1;
+    RETURN -3;
 
     IF EXISTS (
         SELECT 1
@@ -1401,8 +1433,15 @@ BEGIN
     IF @customer_id IS NULL OR @admin_id IS NULL OR @reason IS NULL OR LTRIM(RTRIM(@reason)) = ''
         RETURN -1;
 
-    IF NOT EXISTS (SELECT 1 FROM dbo.Customer WHERE customer_id = @customer_id)
-        RETURN -1;
+    IF NOT EXISTS (SELECT 1 FROM dbo.Users WHERE [user_id] = @customer_id)
+    RETURN -1;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM dbo.Customer
+        WHERE customer_id = @customer_id
+    )
+    RETURN -3;
 
     IF NOT EXISTS (SELECT 1 FROM dbo.Admin WHERE admin_id = @admin_id)
         RETURN -3;
@@ -1481,12 +1520,15 @@ BEGIN
     IF @customer_id IS NULL OR @admin_id IS NULL
         RETURN -1;
 
+    IF NOT EXISTS (SELECT 1 FROM dbo.Users WHERE [user_id] = @customer_id)
+    RETURN -1;
+
     IF NOT EXISTS (
         SELECT 1
         FROM dbo.Customer
         WHERE customer_id = @customer_id
     )
-        RETURN -1;
+    RETURN -3;
 
     IF NOT EXISTS (
         SELECT 1
@@ -1640,6 +1682,12 @@ BEGIN
         OR @business_type IS NULL
         OR @business_type NOT IN ('Restaurant', 'Pharmacy')
     RETURN -1;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.Users WHERE [user_id] = @partner_id)
+    RETURN -1;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.[Partner] WHERE partner_id = @partner_id)
+    RETURN -3;
 
     IF @business_type = 'Restaurant'
         AND (@cuisine_type IS NULL OR @food_category IS NULL OR @pharmacy_type IS NOT NULL)
@@ -2835,10 +2883,17 @@ BEGIN
 
     IF NOT EXISTS (
         SELECT 1
-        FROM Customer
-        WHERE customer_id = @customer_id
+        FROM dbo.Users
+        WHERE [user_id] = @customer_id
     )
     RETURN -1;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM dbo.Customer
+        WHERE customer_id = @customer_id
+    )
+    RETURN -3;
 
     IF @item_type = 'Business'
     BEGIN
