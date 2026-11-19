@@ -2481,14 +2481,14 @@ AS BEGIN
         quantity INT NOT NULL,
         unit_price DECIMAL(10,2) NOT NULL
     );
-    
+
     BEGIN TRY
         BEGIN TRANSACTION;
 
         SELECT @cart_status = status
         FROM dbo.Cart WITH (UPDLOCK, HOLDLOCK) -- To prevent any updates or insertions while the cart is checking out
         WHERE cart_id = @cart_id;
-    
+
         IF @cart_status IS NULL OR @cart_status <> 'Active'
         BEGIN
             COMMIT TRANSACTION;
@@ -2524,26 +2524,26 @@ AS BEGIN
            )
         BEGIN
             COMMIT TRANSACTION;
-                RETURN -7;
-        END;
-   
-        IF @payment_method = 'Wallet'
-           AND (SELECT wallet_balance FROM Customer WHERE customer_id = @customer_id) < @total
-       BEGIN
-            COMMIT TRANSACTION;
-               RETURN -7;
+            RETURN -7;
         END;
 
-   IF NOT EXISTS (
+        IF @payment_method = 'Wallet'
+           AND (SELECT wallet_balance FROM Customer WHERE customer_id = @customer_id) < @total
+        BEGIN
+            COMMIT TRANSACTION;
+            RETURN -7;
+        END;
+
+        IF NOT EXISTS (
             SELECT 1 FROM Rider r
             INNER JOIN Users u ON r.rider_id = u.user_id
             WHERE r.zone_id = @zone_id AND r.is_available = 1 AND u.account_status = 'Active'
-   )
+        )
         BEGIN
             COMMIT TRANSACTION;
-       RETURN -8;
+            RETURN -8;
         END;
-   
+
             UPDATE ci
             SET ci.unit_price = priced.unit_price
             FROM dbo.CartItem AS ci
@@ -2611,57 +2611,56 @@ AS BEGIN
     IF @order_id IS NULL
         RETURN -1;
 
-    IF NOT EXISTS(SELECT * FROM Orders WHERE order_id=@order_id)
-        RETURN -1;
+    DECLARE @order_status VARCHAR(20), @payment_id INT, @voucher_id INT,
+            @remaining_amount DECIMAL(10,2), @customer_id INT, @method VARCHAR(20);
 
-    IF (SELECT status FROM Orders WHERE order_id=@order_id) = 'Cancelled'
-        RETURN -4;
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    IF EXISTS(
-        SELECT * FROM Orders o
-        INNER JOIN SubOrder s on o.order_id=s.order_id
-        WHERE s.status IN ('Delivered','Picked Up') AND o.order_id=@order_id
-    )
-        RETURN -4;
+        SELECT @order_status = status, @voucher_id = voucher_id
+        FROM dbo.Orders WITH (UPDLOCK, HOLDLOCK) -- Lock tables to prevent any in-between modifications
+        WHERE order_id = @order_id;
 
-    BEGIN TRANSACTION;
+        IF @order_status IS NULL
+        BEGIN
+            COMMIT TRANSACTION;
+            RETURN -1;
+        END;
 
-        DECLARE @payment_id INT, @voucher_id INT,@remaining_amount DECIMAL(10,2),@customer_id INT,@method VARCHAR(20);
+        IF @order_status = 'Cancelled' OR EXISTS (
+            SELECT 1 FROM dbo.SubOrder
+            WHERE order_id = @order_id AND status IN ('Delivered', 'Picked Up')
+        )
+        BEGIN
+            COMMIT TRANSACTION;
+            RETURN -4;
+        END;
 
-        SELECT @voucher_id=voucher_id FROM Orders WHERE order_id=@order_id
-            
-        SELECT @payment_id=p.payment_id,@remaining_amount=p.amount-p.refunded_amount,@method=p.method,@customer_id=c.customer_id FROM Payment p
-        INNER JOIN Orders o ON o.order_id=p.order_id
-        INNER JOIN Cart c on c.cart_id=o.cart_id
-        WHERE p.order_id=@order_id;
+        SELECT @payment_id = p.payment_id, @remaining_amount = p.amount - p.refunded_amount,
+               @method = p.method, @customer_id = c.customer_id
+        FROM Payment p
+        INNER JOIN Orders o ON o.order_id = p.order_id
+        INNER JOIN Cart c ON c.cart_id = o.cart_id
+        WHERE p.order_id = @order_id;
 
         IF @voucher_id IS NOT NULL
-            BEGIN
-                BEGIN TRY
-                    UPDATE Voucher SET status='Unused' WHERE voucher_id=@voucher_id;
-                END TRY
-                BEGIN CATCH
-                     IF @@TRANCOUNT>0
-                         ROLLBACK TRANSACTION;
-                     RETURN -1;
-                END CATCH
-            END
-                
-        BEGIN TRY
-            UPDATE Orders SET voucher_id=NULL,status='Cancelled' WHERE order_id=@order_id;
-            UPDATE Payment SET refunded_amount=refunded_amount+@remaining_amount WHERE payment_id=@payment_id;
-            UPDATE SubOrder SET status='Cancelled' WHERE order_id=@order_id;
-            
-            IF @method<>'Cash'
-                UPDATE Customer SET wallet_balance=wallet_balance+@remaining_amount WHERE customer_id=@customer_id;
-        END TRY
-        BEGIN CATCH
-            IF @@TRANCOUNT>0
-                ROLLBACK TRANSACTION;
-            RETURN -1;
-        END CATCH
-    COMMIT TRANSACTION;
-    RETURN 0;
+            UPDATE Voucher SET status = 'Unused' WHERE voucher_id = @voucher_id;
+
+        UPDATE Orders SET voucher_id = NULL, status = 'Cancelled' WHERE order_id = @order_id;
+        UPDATE Payment SET refunded_amount = refunded_amount + @remaining_amount WHERE payment_id = @payment_id;
+        UPDATE SubOrder SET status = 'Cancelled' WHERE order_id = @order_id;
+
+        IF @method <> 'Cash'
+            UPDATE Customer SET wallet_balance = wallet_balance + @remaining_amount WHERE customer_id = @customer_id;
+
+        COMMIT TRANSACTION;
+        RETURN 0;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+        RETURN -1;
+    END CATCH;
 END
 GO
 
@@ -2995,26 +2994,44 @@ BEGIN
     IF @delivery_id IS NULL
         RETURN -1;
 
-    IF NOT EXISTS (SELECT * FROM Delivery WHERE delivery_id = @delivery_id)
+    DECLARE @order_id INT, @suborder_id INT, @locked_order_id INT;
+
+    SELECT @order_id = s.order_id, @suborder_id = s.suborder_id
+    FROM dbo.Delivery AS d
+    INNER JOIN dbo.SubOrder AS s ON s.suborder_id = d.suborder_id
+    WHERE d.delivery_id = @delivery_id;
+
+    IF @order_id IS NULL
         RETURN -1;
 
-    IF (SELECT SubOrder.status FROM Delivery INNER JOIN SubOrder ON SubOrder.suborder_id = Delivery.suborder_id WHERE delivery_id = @delivery_id) IN ('Placed', 'Delivered', 'Cancelled', 'Picked Up')
-        RETURN -4;
-
-    DECLARE @order_id INT;
-
-    SELECT @order_id = s.order_id FROM SubOrder s INNER JOIN Delivery d ON s.suborder_id = d.suborder_id WHERE d.delivery_id = @delivery_id;
-
     BEGIN TRY
-        UPDATE SubOrder SET status='Picked Up' WHERE suborder_id=(SELECT suborder_id FROM Delivery WHERE delivery_id=@delivery_id);
-        UPDATE Orders SET status='In Progress' WHERE order_id=@order_id;
-        UPDATE Delivery SET picked_up_at=GETDATE() WHERE delivery_id=@delivery_id;
+        BEGIN TRANSACTION;
+
+        SELECT @locked_order_id = order_id
+        FROM dbo.Orders WITH (UPDLOCK, HOLDLOCK)
+        WHERE order_id = @order_id;
+
+        UPDATE dbo.SubOrder
+        SET status = 'Picked Up'
+        WHERE order_id = @locked_order_id AND suborder_id = @suborder_id AND status = 'Assigned';
+
+        IF @@ROWCOUNT = 0
+        BEGIN
+            COMMIT TRANSACTION;
+            RETURN -4;
+        END;
+
+        UPDATE dbo.Orders SET status = 'In Progress' WHERE order_id = @order_id;
+        UPDATE dbo.Delivery SET picked_up_at = GETDATE() WHERE delivery_id = @delivery_id;
+
+        COMMIT TRANSACTION;
         RETURN 0;
     END TRY
     BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
         RETURN -1;
     END CATCH;
-
 END
 GO
 
