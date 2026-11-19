@@ -2474,51 +2474,81 @@ AS BEGIN
                 RETURN -1;
         END
     DECLARE @subtotal DECIMAL(10,2),@fees DECIMAL(10,2),@discount DECIMAL(10,2),@total DECIMAL(10,2),@business_count INT;
+    DECLARE @order_id INT, @suborder_id INT, @rider_id INT, @cart_status VARCHAR(20);
+    DECLARE @priced_items TABLE (
+        product_id INT PRIMARY KEY,
+        business_id INT NOT NULL,
+        quantity INT NOT NULL,
+        unit_price DECIMAL(10,2) NOT NULL
+    );
     
     BEGIN TRY
-    SELECT @subtotal=SUM(ca.quantity * (p.price-p.discount_amount)),@business_count=COUNT(DISTINCT b.business_id) FROM CartItem ca
-    INNER JOIN Product p ON p.product_id=ca.product_id
-    INNER JOIN Business b ON p.business_id=b.business_id
-    WHERE ca.cart_id=@cart_id;
+        BEGIN TRANSACTION;
 
-    SELECT @fees=@business_count*@delivery_fee,@discount=dbo.Calculate_Voucher_Discount(@voucher_id,@subtotal);
+        SELECT @cart_status = status
+        FROM dbo.Cart WITH (UPDLOCK, HOLDLOCK) -- To prevent any updates or insertions while the cart is checking out
+        WHERE cart_id = @cart_id;
     
-    SELECT @total=@subtotal + @fees - @discount;
-    END TRY
-    BEGIN CATCH
-        RETURN -1;
-    END CATCH
-
-    IF @payment_method='Card'
+        IF @cart_status IS NULL OR @cart_status <> 'Active'
         BEGIN
-            IF @card_id IS NULL 
-            OR (SELECT expiration_date FROM Card WHERE card_id=@card_id)<CAST(GETDATE() AS DATE) 
-            OR (SELECT customer_id FROM Card WHERE card_id=@card_id)<>@customer_id
+            COMMIT TRANSACTION;
+            IF @cart_status IS NULL RETURN -1;
+            RETURN -4;
+        END;
+
+        -- Capture each price once for the cart, suborders, and payment.
+        INSERT INTO @priced_items (product_id, business_id, quantity, unit_price)
+        SELECT ci.product_id, p.business_id, ci.quantity, p.price - p.discount_amount
+        FROM dbo.CartItem AS ci WITH (UPDLOCK, HOLDLOCK)
+        INNER JOIN dbo.Product AS p ON p.product_id = ci.product_id
+        WHERE ci.cart_id = @cart_id;
+
+        IF @@ROWCOUNT = 0 -- If no rows were affected ( No matches )
+        BEGIN
+            COMMIT TRANSACTION;
+            RETURN -9;
+        END;
+
+        SELECT @subtotal = SUM(quantity * unit_price),
+               @business_count = COUNT(DISTINCT business_id)
+        FROM @priced_items;
+
+        SELECT @fees = @business_count * @delivery_fee,
+               @discount = dbo.Calculate_Voucher_Discount(@voucher_id, @subtotal);
+        SET @total = @subtotal + @fees - @discount;
+
+        IF @payment_method = 'Card' AND (
+               @card_id IS NULL
+               OR (SELECT expiration_date FROM Card WHERE card_id = @card_id) < CAST(GETDATE() AS DATE)
+               OR (SELECT customer_id FROM Card WHERE card_id = @card_id) <> @customer_id
+           )
+        BEGIN
+            COMMIT TRANSACTION;
                 RETURN -7;
-        END
+        END;
    
-   IF @payment_method='Wallet'
+        IF @payment_method = 'Wallet'
+           AND (SELECT wallet_balance FROM Customer WHERE customer_id = @customer_id) < @total
        BEGIN
-           IF (SELECT wallet_balance FROM Customer WHERE customer_id=@customer_id)<@total  
+            COMMIT TRANSACTION;
                RETURN -7;
-       END
+        END;
 
    IF NOT EXISTS (
-       SELECT * FROM Rider r
-       INNER JOIN Users u ON r.rider_id=u.user_id
-       WHERE r.zone_id=@zone_id AND r.is_available=1 AND u.account_status='Active'
+            SELECT 1 FROM Rider r
+            INNER JOIN Users u ON r.rider_id = u.user_id
+            WHERE r.zone_id = @zone_id AND r.is_available = 1 AND u.account_status = 'Active'
    )
+        BEGIN
+            COMMIT TRANSACTION;
        RETURN -8;
+        END;
    
-   DECLARE @order_id INT, @suborder_id INT, @rider_id INT;
-
-   BEGIN TRY
-       BEGIN TRANSACTION
-            UPDATE ca
-            SET ca.unit_price=p.price-p.discount_amount
-            FROM CartItem ca
-            INNER JOIN Product p ON ca.product_id=p.product_id
-            WHERE ca.cart_id=@cart_id;
+            UPDATE ci
+            SET ci.unit_price = priced.unit_price
+            FROM dbo.CartItem AS ci
+            INNER JOIN @priced_items AS priced ON priced.product_id = ci.product_id
+            WHERE ci.cart_id = @cart_id;
 
             INSERT INTO Orders (order_date,discount_amount,total_amount,cart_id,zone_id,voucher_id) VALUES
             (GETDATE(),@discount,@total,@cart_id,@zone_id,@voucher_id);
@@ -2526,11 +2556,9 @@ AS BEGIN
             SET @order_id=SCOPE_IDENTITY();
 
             INSERT INTO SubOrder (total_price,delivery_fee,order_id,business_id)
-            SELECT SUM(ca.quantity*ca.unit_price),@delivery_fee,@order_id,b.business_id FROM CartItem ca
-            INNER JOIN Product p ON ca.product_id=p.product_id
-            INNER JOIN Business b ON b.business_id=p.business_id
-            WHERE ca.cart_id=@cart_id
-            GROUP BY b.business_id
+            SELECT SUM(quantity * unit_price), @delivery_fee, @order_id, business_id
+            FROM @priced_items
+            GROUP BY business_id;
 
             WHILE EXISTS(SELECT * FROM SubOrder WHERE order_id=@order_id AND status='Placed')
                 BEGIN
