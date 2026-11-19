@@ -2326,6 +2326,14 @@ AS BEGIN
         RETURN -1;
     ELSE IF (SELECT status FROM Cart WHERE cart_id=@cart_id)='Checked Out'
         RETURN -4;
+    ELSE IF EXISTS (
+        SELECT 1
+        FROM Cart C
+        INNER JOIN [Address] A ON A.address_id = C.address_id
+        WHERE C.cart_id = @cart_id
+            AND A.is_active = 0
+    )
+        RETURN -4;
     ELSE IF NOT EXISTS(SELECT * FROM CartItem  WHERE cart_id=@cart_id)
         RETURN -9;
     ELSE IF NOT EXISTS(SELECT * FROM CartItem  WHERE cart_id=@cart_id AND product_id=@product_id)
