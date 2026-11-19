@@ -2062,8 +2062,10 @@ CREATE PROCEDURE Add_Customer_Address
 AS BEGIN
     IF @customer_id IS NULL OR @zone_id IS NULL OR @description IS NULL OR @description=''
         RETURN -1;
-    ELSE IF NOT EXISTS (SELECT * FROM Customer WHERE customer_id=@customer_id) OR NOT EXISTS (SELECT * FROM Zone where zone_id=@zone_id)
+    ELSE IF NOT EXISTS (SELECT * FROM Users WHERE user_id=@customer_id) OR NOT EXISTS (SELECT * FROM Zone where zone_id=@zone_id)
         RETURN -1;
+    ELSE IF NOT EXISTS (SELECT * FROM Customer WHERE customer_id=@customer_id)
+        RETURN -3;
     ELSE
         BEGIN
             BEGIN TRY
@@ -2185,6 +2187,10 @@ CREATE PROCEDURE Add_Card
 AS BEGIN
     IF @customer_id IS NULL OR @card_no IS NULL OR @card_holder_name IS NULL OR @card_holder_name='' OR @expiration_date IS NULL
         RETURN -1;
+    ELSE IF NOT EXISTS (SELECT * FROM Users WHERE user_id=@customer_id)
+        RETURN -1;
+    ELSE IF NOT EXISTS (SELECT * FROM Customer WHERE customer_id=@customer_id)
+        RETURN -3;
     ELSE IF LEN(@card_no)<>16 OR @card_no LIKE '%[^0-9]%' --contains anything thats not a digit
         RETURN -1;
     ELSE IF @expiration_date<CAST(GETDATE() AS DATE)
@@ -2211,6 +2217,13 @@ CREATE PROCEDURE Create_Cart
 AS BEGIN
     IF @customer_id IS NULL
         RETURN -1;
+
+    ELSE IF NOT EXISTS (SELECT * FROM Users WHERE user_id=@customer_id)
+        RETURN -1;
+    
+    ELSE IF NOT EXISTS (SELECT * FROM Customer WHERE customer_id=@customer_id)
+        RETURN -3;
+
     ELSE IF (SELECT account_status FROM Customer c INNER JOIN Users u on u.user_id=c.customer_id AND c.customer_id=@customer_id)='Blacklisted'
         RETURN -3;
 
@@ -2339,7 +2352,7 @@ AS BEGIN
     IF @voucher_id IS NULL 
         RETURN 0.0;
 
-    ELSE IF @order_subtotal<=0 OR @order_subtotal IS NULL
+    ELSE IF @order_subtotal<0 OR @order_subtotal IS NULL
         RETURN -1;
 
     ELSE IF NOT EXISTS(
@@ -2452,17 +2465,21 @@ AS BEGIN
             IF (SELECT expiry_date FROM Voucher WHERE voucher_id=@voucher_id)<CAST(GETDATE() AS DATE)
                 RETURN -1;
         END
-
     DECLARE @subtotal DECIMAL(10,2),@fees DECIMAL(10,2),@discount DECIMAL(10,2),@total DECIMAL(10,2),@business_count INT;
-
+    
+    BEGIN TRY
     SELECT @subtotal=SUM(ca.quantity * (p.price-p.discount_amount)),@business_count=COUNT(DISTINCT b.business_id) FROM CartItem ca
     INNER JOIN Product p ON p.product_id=ca.product_id
     INNER JOIN Business b ON p.business_id=b.business_id
     WHERE ca.cart_id=@cart_id;
 
     SELECT @fees=@business_count*@delivery_fee,@discount=dbo.Calculate_Voucher_Discount(@voucher_id,@subtotal);
-     
+    
     SELECT @total=@subtotal + @fees - @discount;
+    END TRY
+    BEGIN CATCH
+        RETURN -1;
+    END CATCH
 
     IF @payment_method='Card'
         BEGIN
@@ -3121,11 +3138,11 @@ RETURNS TABLE
 AS
 RETURN
 (
-    SELECT o.order_id,SUM(s.total_price+s.delivery_fee)-o.discount_amount AS expected_total,o.total_amount AS order_total,p.amount AS payment_amount FROM Orders o
-    INNER JOIN SubOrder s ON s.order_id = o.order_id
+    SELECT o.order_id,ISNULL(SUM(s.total_price+s.delivery_fee),0)-o.discount_amount AS expected_total,o.total_amount AS order_total,p.amount AS payment_amount FROM Orders o
+    LEFT OUTER JOIN SubOrder s ON s.order_id = o.order_id
     LEFT OUTER JOIN Payment p ON p.order_id=o.order_id
     GROUP BY o.order_id,o.total_amount,o.discount_amount,p.amount
-    HAVING p.amount<>o.total_amount OR p.amount IS NULL OR SUM(s.total_price+s.delivery_fee)-o.discount_amount<>o.total_amount
+    HAVING p.amount<>o.total_amount OR p.amount IS NULL OR ISNULL(SUM(s.total_price+s.delivery_fee),0)-o.discount_amount<>o.total_amount
 );
 GO
 
