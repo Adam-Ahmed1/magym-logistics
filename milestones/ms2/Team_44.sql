@@ -2945,7 +2945,7 @@ BEGIN
     IF NOT EXISTS (SELECT * FROM Delivery WHERE delivery_id = @delivery_id)
         RETURN -1;
 
-    IF (SELECT SubOrder.status FROM Delivery INNER JOIN SubOrder ON SubOrder.suborder_id = Delivery.suborder_id WHERE delivery_id = @delivery_id) IN ('Delivered', 'Cancelled', 'Picked Up')
+    IF (SELECT SubOrder.status FROM Delivery INNER JOIN SubOrder ON SubOrder.suborder_id = Delivery.suborder_id WHERE delivery_id = @delivery_id) IN ('Placed', 'Delivered', 'Cancelled', 'Picked Up')
         RETURN -4;
 
     DECLARE @order_id INT;
