@@ -5,7 +5,7 @@ A database design project for a local delivery and fulfillment platform connecti
 **Ongoing team project · September 2026–present**  
 CSEN 501 · Databases I · German University in Cairo · Winter 2026
 
-[Explore the project walkthrough](https://doma990.github.io/projects/magym-logistics/) · [Browse the relational schema](https://doma990.github.io/projects/magym-logistics/#schema)
+[Explore the project walkthrough](https://Adam-Ahmed1.github.io/projects/magym-logistics/) · [Browse the relational schema](https://Adam-Ahmed1.github.io/projects/magym-logistics/#schema)
 
 ## Project progress
 
@@ -40,7 +40,7 @@ The conceptual model captures entities, specializations, relationships, and cons
 - [Relational schema · PDF](milestones/ms1/relational-schema.pdf)
 - [Editable EERD · draw.io](milestones/ms1/magym-logistics.drawio)
 
-For a zoomable diagram and a searchable schema with linked references, use the [portfolio walkthrough](https://doma990.github.io/projects/magym-logistics/).
+For a zoomable diagram and a searchable schema with linked references, use the [portfolio walkthrough](https://Adam-Ahmed1.github.io/projects/magym-logistics/).
 
 ### Open the editable diagram
 
