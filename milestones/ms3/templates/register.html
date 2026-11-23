@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Register — {{ role_label }}{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center min-h-[60vh]">
+    <div class="card w-full max-w-lg bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title justify-center text-2xl mb-4">{{ role_label }} Registration</h2>
+
+            <form method="POST">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">First name *</span></label>
+                        <input type="text" name="first_name" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Middle name</span></label>
+                        <input type="text" name="middle_name" class="input input-bordered" />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Last name *</span></label>
+                        <input type="text" name="last_name" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Username *</span></label>
+                        <input type="text" name="username" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Email *</span></label>
+                        <input type="email" name="email" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Date of birth</span></label>
+                        <input type="date" name="dob" class="input input-bordered" />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Password *</span></label>
+                        <input type="password" name="password" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Phone (11 digits) *</span></label>
+                        <input type="text" name="phone" class="input input-bordered"
+                               pattern="\d{11}" title="Exactly 11 digits" maxlength="11" required />
+                    </div>
+
+                    {% if role == 'rider' %}
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Vehicle type *</span></label>
+                        <input type="text" name="vehicle_type" placeholder="e.g. Motorcycle, Bicycle" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Plate number *</span></label>
+                        <input type="text" name="plate_no" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">License number *</span></label>
+                        <input type="text" name="license_no" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Zone *</span></label>
+                        <select name="zone_id" class="select select-bordered" required>
+                            <option value="" disabled selected>Pick a zone</option>
+                            {% for z in zones %}
+                                <option value="{{ z.zone_id }}">{{ z.zone_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full mt-6">Register</button>
+            </form>
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('landing') }}" class="link link-hover text-sm">← Back to start</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

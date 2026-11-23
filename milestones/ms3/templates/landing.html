@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Welcome — MAGYM Logistics{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-8 px-2">
+
+    <!-- Header / Hero Section -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-base-content mb-4">
+            MAGYM Logistics
+        </h1>
+        <p class="text-lg md:text-xl text-base-content/70 max-w-2xl mx-auto">
+            Fast, reliable local delivery connecting customers with neighborhood restaurants, pharmacies, and riders.
+        </p>
+        <div class="divider max-w-xs mx-auto my-6 text-sm text-base-content/50 uppercase tracking-wider font-medium">
+            Choose your portal
+        </div>
+    </div>
+
+    <!-- 3 Persona Tiles -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+
+        <!-- Customer Tile -->
+        <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-200 border border-base-200 flex flex-col justify-between">
+            <div class="card-body p-6">
+                <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-3xl mb-4">
+                    🛒
+                </div>
+                <div class="badge badge-primary badge-sm font-semibold mb-1">Customer</div>
+                <h2 class="card-title text-2xl mb-2 text-base-content">Order Food & Essentials</h2>
+                <p class="text-sm text-base-content/70 leading-relaxed mb-6">
+                    Browse active restaurants and pharmacies in your zone, customize orders with vouchers, and track live deliveries.
+                </p>
+                <div class="card-actions flex flex-col gap-2 mt-auto">
+                    <a href="{{ url_for('auth.login', role='customer') }}" class="btn btn-primary w-full shadow-sm">
+                        Customer Log In
+                    </a>
+                    <a href="{{ url_for('auth.register', role='customer') }}" class="btn btn-outline btn-primary w-full">
+                        Create Account
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Partner Tile -->
+        <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-200 border border-base-200 flex flex-col justify-between">
+            <div class="card-body p-6">
+                <div class="w-14 h-14 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center text-3xl mb-4">
+                    🏪
+                </div>
+                <div class="badge badge-secondary badge-sm font-semibold mb-1">Partner</div>
+                <h2 class="card-title text-2xl mb-2 text-base-content">Grow Your Business</h2>
+                <p class="text-sm text-base-content/70 leading-relaxed mb-6">
+                    Manage restaurant and pharmacy profiles, maintain product catalogs, set promotional discounts, and track revenue.
+                </p>
+                <div class="card-actions flex flex-col gap-2 mt-auto">
+                    <a href="{{ url_for('auth.login', role='partner') }}" class="btn btn-secondary w-full shadow-sm">
+                        Partner Log In
+                    </a>
+                    <a href="{{ url_for('auth.register', role='partner') }}" class="btn btn-outline btn-secondary w-full">
+                        Register Business
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rider Tile -->
+        <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-200 border border-base-200 flex flex-col justify-between">
+            <div class="card-body p-6">
+                <div class="w-14 h-14 rounded-2xl bg-accent/10 text-accent flex items-center justify-center text-3xl mb-4">
+                    🏍️
+                </div>
+                <div class="badge badge-accent badge-sm font-semibold mb-1">Rider</div>
+                <h2 class="card-title text-2xl mb-2 text-base-content">Deliver & Earn</h2>
+                <p class="text-sm text-base-content/70 leading-relaxed mb-6">
+                    Toggle your availability in assigned zones, manage active orders from pickup to delivery, and view performance ratings.
+                </p>
+                <div class="card-actions flex flex-col gap-2 mt-auto">
+                    <a href="{{ url_for('auth.login', role='rider') }}" class="btn btn-accent w-full shadow-sm">
+                        Rider Log In
+                    </a>
+                    <a href="{{ url_for('auth.register', role='rider') }}" class="btn btn-outline btn-accent w-full">
+                        Register as Rider
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Discrete Admin Portal Bar -->
+    <div class="card bg-base-100/70 border border-dashed border-base-300 p-4 rounded-2xl">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 rounded-xl bg-neutral/10 text-neutral text-xl">
+                    🛡️
+                </div>
+                <div>
+                    <h3 class="font-bold text-base text-base-content">Platform Administration</h3>
+                    <p class="text-xs text-base-content/60">
+                        System health, business approvals, zone oversight, and audit reports.
+                    </p>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.login', role='admin') }}" class="btn btn-neutral btn-sm px-6">
+                Admin Sign In →
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
