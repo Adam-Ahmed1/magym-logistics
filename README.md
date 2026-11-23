@@ -5,7 +5,7 @@ A database design project for a local delivery and fulfillment platform connecti
 **Ongoing team project · September 2026–present**  
 CSEN 501 · Databases I · German University in Cairo · Winter 2026
 
-[Explore the project walkthrough](https://Adam-Ahmed1.github.io/projects/magym-logistics/) · [Browse the relational schema](https://Adam-Ahmed1.github.io/projects/magym-logistics/#schema)
+[Project walkthrough](https://Adam-Ahmed1.github.io/projects/magym-logistics/)
 
 ## Project progress
 
