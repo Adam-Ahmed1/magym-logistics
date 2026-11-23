@@ -45,7 +45,3 @@ For a zoomable diagram and a searchable schema with linked references, use the [
 ### Open the editable diagram
 
 Download the `.drawio` file and open it in [diagrams.net](https://app.diagrams.net/) using **File → Open from → Device**. The PDFs can be read directly or downloaded from GitHub.
-
-## Collaboration
-
-Developed as a team course project for CSEN 501 Databases I. The artifacts preserve the team's Milestone 1 design; this repository will grow as later milestones are completed.
