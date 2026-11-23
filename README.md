@@ -40,8 +40,6 @@ The conceptual model captures entities, specializations, relationships, and cons
 - [Relational schema · PDF](milestones/ms1/relational-schema.pdf)
 - [Editable EERD · draw.io](milestones/ms1/magym-logistics.drawio)
 
-For a zoomable diagram and a searchable schema with linked references, use the [portfolio walkthrough](https://Adam-Ahmed1.github.io/projects/magym-logistics/).
-
 ### Open the editable diagram
 
-Download the `.drawio` file and open it in [diagrams.net](https://app.diagrams.net/) using **File → Open from → Device**. The PDFs can be read directly or downloaded from GitHub.
+Download the `.drawio` file and open it in [diagrams.net](https://app.diagrams.net/)
