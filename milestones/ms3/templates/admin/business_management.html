@@ -1,0 +1,178 @@
+
+{% extends "base.html" %}
+
+{% block title %}Business Management | MAGYM Logistics{% endblock %}
+
+{% block content %}
+
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div>
+        <a href="{{ url_for('admin.home') }}" class="btn btn-ghost btn-sm mb-3">
+            ← Back to Dashboard
+        </a>
+
+        <h1 class="text-3xl font-bold">Business Management</h1>
+
+        <p class="text-base-content/60 mt-2">
+            Browse registered businesses and manage their account status.
+        </p>
+    </div>
+
+    <!-- Business List -->
+    <div class="bg-base-100 rounded-2xl shadow-sm border border-base-300 p-6">
+
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-5">
+            <div>
+                <h2 class="text-xl font-bold">Registered Businesses</h2>
+                <p class="text-sm text-base-content/60">
+                    View all businesses registered on the platform.
+                </p>
+            </div>
+
+            <span class="badge badge-primary badge-lg">
+                {{ businesses|length }} Businesses
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+
+            <table class="table table-zebra">
+
+                <thead>
+                    <tr>
+                        <th>Business ID</th>
+                        <th>Business Name</th>
+                        <th>Business Type</th>
+                        <th>Zone</th>
+                        <th>Partner</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for business in businesses %}
+
+                    <tr>
+                        <td>{{ business.business_id }}</td>
+
+                        <td class="font-semibold">
+                            {{ business.business_name }}
+                        </td>
+
+                        <td>{{ business.business_type }}</td>
+
+                        <td>{{ business.zone_name }}</td>
+
+                        <td>{{ business.partner_name }}</td>
+
+                        <td>
+                            {% if business.status == 'Active' %}
+                                <span class="badge badge-success">Active</span>
+
+                            {% elif business.status == 'Suspended' %}
+                                <span class="badge badge-error">Suspended</span>
+
+                            {% elif business.status == 'Pending' %}
+                                <span class="badge badge-warning">Pending</span>
+
+                            {% elif business.status == 'Rejected' %}
+                                <span class="badge badge-ghost">Rejected</span>
+
+                            {% else %}
+                                <span class="badge badge-ghost">
+                                    {{ business.status }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if session.get('admin_role') == 'Super Admin' %}
+
+                                {% if business.status == 'Active' %}
+
+                                    <form
+                                        action="{{ url_for('admin.suspend_business', business_id=business.business_id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Are you sure you want to suspend this business?');"
+                                        class="flex flex-col gap-2 min-w-48"
+                                    >
+
+                                        <input
+                                            type="text"
+                                            name="reason"
+                                            placeholder="Reason for suspension"
+                                            maxlength="255"
+                                            required
+                                            class="input input-bordered input-sm w-full"
+                                        >
+
+                                        <button type="submit" class="btn btn-error btn-sm">
+                                            Suspend Business
+                                        </button>
+
+                                    </form>
+
+                                {% elif business.status == 'Suspended' %}
+
+                                    <form
+                                        action="{{ url_for('admin.reinstate_business', business_id=business.business_id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Are you sure you want to reinstate this business?');"
+                                    >
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            Reinstate Business
+                                        </button>
+                                    </form>
+
+                                {% else %}
+
+                                    <span class="text-sm text-base-content/50">
+                                        No action available
+                                    </span>
+
+                                {% endif %}
+
+                            {% else %}
+
+                                <span class="text-sm text-base-content/50">
+                                    View only
+                                </span>
+
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+                        <td colspan="7" class="text-center py-12">
+
+                            <div class="text-4xl mb-3">🏢</div>
+
+                            <p class="font-semibold">
+                                No businesses found
+                            </p>
+
+                            <p class="text-sm text-base-content/50 mt-1">
+                                Registered businesses will appear here.
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

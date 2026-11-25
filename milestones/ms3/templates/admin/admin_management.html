@@ -1,0 +1,239 @@
+
+{% extends "base.html" %}
+
+{% block title %}Admin Management | MAGYM Logistics{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Page Header -->
+    <div>
+        <a href="{{ url_for('admin.home') }}" class="btn btn-ghost btn-sm mb-3">
+            ← Back to Dashboard
+        </a>
+
+        <h1 class="text-3xl font-bold">Admin Management</h1>
+
+        <p class="text-base-content/60 mt-2">
+            Create administrators and manage Zone Admin assignments.
+        </p>
+    </div>
+
+    <!-- Create Admin Section -->
+    <div class="bg-base-100 rounded-2xl shadow-sm border border-base-300 p-6">
+
+        <div class="mb-6">
+            <h2 class="text-xl font-bold">Create New Admin</h2>
+            <p class="text-sm text-base-content/60 mt-1">
+                Add a new administrator to the platform.
+            </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.create_admin') }}">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">First Name *</span>
+                    </label>
+                    <input type="text" name="first_name"
+                           maxlength="30" required
+                           class="input input-bordered w-full"
+                           placeholder="First name">
+                </div>
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Middle Name</span>
+                    </label>
+                    <input type="text" name="middle_name"
+                           maxlength="30"
+                           class="input input-bordered w-full"
+                           placeholder="Middle name (optional)">
+                </div>
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Last Name *</span>
+                    </label>
+                    <input type="text" name="last_name"
+                           maxlength="30" required
+                           class="input input-bordered w-full"
+                           placeholder="Last name">
+                </div>
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Username *</span>
+                    </label>
+                    <input type="text" name="username"
+                           maxlength="30" required
+                           class="input input-bordered w-full"
+                           placeholder="Choose a username">
+                </div>
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Password *</span>
+                    </label>
+                    <input type="password" name="password"
+                           maxlength="30" required
+                           class="input input-bordered w-full"
+                           placeholder="Create a password">
+                </div>
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Email *</span>
+                    </label>
+                    <input type="email" name="email"
+                           maxlength="100" required
+                           class="input input-bordered w-full"
+                           placeholder="example@email.com">
+                </div>
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Phone Number *</span>
+                    </label>
+                    <input type="tel" name="phone"
+                           pattern="[0-9]{11}" maxlength="11"
+                           minlength="11" required
+                           class="input input-bordered w-full"
+                           placeholder="11-digit phone number">
+                </div>
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Date of Birth</span>
+                    </label>
+                    <input type="date" name="dob"
+                           class="input input-bordered w-full">
+                </div>
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Admin Role *</span>
+                    </label>
+                    <select name="role" id="adminRole"
+                            required
+                            class="select select-bordered w-full">
+                        <option value="">Select a role</option>
+                        <option value="Super Admin">Super Admin</option>
+                        <option value="Zone Admin">Zone Admin</option>
+                    </select>
+                </div>
+
+                <div id="zoneField" class="hidden">
+                    <label class="label">
+                        <span class="label-text font-semibold">Assigned Zone *</span>
+                    </label>
+                    <select name="zone_id" id="adminZone"
+                            class="select select-bordered w-full">
+                        <option value="">Select a zone</option>
+
+                        {% for zone in zones %}
+                            <option value="{{ zone.zone_id }}">
+                                {{ zone.zone_name }}
+                            </option>
+                        {% endfor %}
+
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button type="submit" class="btn btn-primary">
+                    Create Admin
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Assign Zone Section -->
+    <div class="bg-base-100 rounded-2xl shadow-sm border border-base-300 p-6">
+
+        <div class="mb-6">
+            <h2 class="text-xl font-bold">Assign / Move Zone Admin</h2>
+            <p class="text-sm text-base-content/60 mt-1">
+                Change the assigned zone of an existing Zone Admin.
+            </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.assign_admin_zone') }}">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Select Zone Admin *</span>
+                    </label>
+
+                    <select name="admin_id" required
+                            class="select select-bordered w-full">
+                        <option value="">Select an administrator</option>
+
+                        {% for admin in zone_admins %}
+                            <option value="{{ admin.admin_id }}">
+                                {{ admin.first_name }} {{ admin.last_name }}
+                                — {{ admin.zone_name or 'No assigned zone' }}
+                            </option>
+                        {% endfor %}
+
+                    </select>
+                </div>
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">New Zone *</span>
+                    </label>
+
+                    <select name="zone_id" required
+                            class="select select-bordered w-full">
+                        <option value="">Select a zone</option>
+
+                        {% for zone in zones %}
+                            <option value="{{ zone.zone_id }}">
+                                {{ zone.zone_name }}
+                            </option>
+                        {% endfor %}
+
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button type="submit" class="btn btn-secondary">
+                    Assign Zone
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<!-- Show Zone Field Only for Zone Admin -->
+<script>
+    const roleSelect = document.getElementById('adminRole');
+    const zoneField = document.getElementById('zoneField');
+    const zoneSelect = document.getElementById('adminZone');
+
+    roleSelect.addEventListener('change', function () {
+        if (this.value === 'Zone Admin') {
+            zoneField.classList.remove('hidden');
+            zoneSelect.required = true;
+        } else {
+            zoneField.classList.add('hidden');
+            zoneSelect.required = false;
+            zoneSelect.value = '';
+        }
+    });
+</script>
+
+{% endblock %}

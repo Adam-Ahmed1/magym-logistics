@@ -1,0 +1,254 @@
+
+{% extends "base.html" %}
+
+{% block title %}Voucher Management | MAGYM Logistics{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Page Header -->
+    <div>
+        <a href="{{ url_for('admin.home') }}" class="btn btn-ghost btn-sm mb-3">
+            ← Back to Dashboard
+        </a>
+
+        <h1 class="text-3xl font-bold">Voucher Management</h1>
+
+        <p class="text-base-content/60 mt-2">
+            Issue customer vouchers and view currently active vouchers.
+        </p>
+    </div>
+
+    <!-- Issue Voucher Section -->
+    <div class="bg-base-100 rounded-2xl shadow-sm border border-base-300 p-6">
+
+        <div class="mb-6">
+            <h2 class="text-xl font-bold">Issue New Voucher</h2>
+            <p class="text-sm text-base-content/60 mt-1">
+                Create a discount voucher and assign it to a customer.
+            </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.issue_voucher') }}">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <!-- Customer -->
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Customer *</span>
+                    </label>
+
+                    <select name="customer_id" required
+                            class="select select-bordered w-full">
+                        <option value="">Select a customer</option>
+
+                        {% for customer in customers %}
+                            <option value="{{ customer.customer_id }}">
+                                {{ customer.first_name }} {{ customer.last_name }}
+                                (ID: {{ customer.customer_id }})
+                            </option>
+                        {% endfor %}
+
+                    </select>
+                </div>
+
+                <!-- Promo Code -->
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Promo Code *</span>
+                    </label>
+
+                    <input type="text" name="promo_code"
+                           maxlength="30" required
+                           class="input input-bordered w-full"
+                           placeholder="e.g. SUMMER20">
+                </div>
+
+                <!-- Discount Type -->
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Discount Type *</span>
+                    </label>
+
+                    <select name="is_percentage" id="discountType"
+                            required
+                            class="select select-bordered w-full">
+                        <option value="">Select discount type</option>
+                        <option value="1">Percentage (%)</option>
+                        <option value="0">Fixed Amount</option>
+                    </select>
+                </div>
+
+                <!-- Discount Amount -->
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Discount Amount *</span>
+                    </label>
+
+                    <input type="number" name="amount"
+                           id="discountAmount"
+                           min="0.01" step="0.01" required
+                           class="input input-bordered w-full"
+                           placeholder="Enter discount amount">
+                    <p id="amountHint" class="text-xs text-base-content/50 mt-1">
+                        Select a discount type first.
+                    </p>
+                </div>
+
+                <!-- Expiry Date -->
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Expiry Date *</span>
+                    </label>
+
+                    <input type="date" name="expiry_date"
+                           id="expiryDate"
+                           required
+                           class="input input-bordered w-full">
+                </div>
+
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button type="submit" class="btn btn-primary">
+                    Issue Voucher
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Active Vouchers Section -->
+    <div class="bg-base-100 rounded-2xl shadow-sm border border-base-300 p-6">
+
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-5">
+
+            <div>
+                <h2 class="text-xl font-bold">Active Vouchers</h2>
+                <p class="text-sm text-base-content/60 mt-1">
+                    Unused vouchers that have not expired.
+                </p>
+            </div>
+
+            <span class="badge badge-success badge-lg">
+                {{ vouchers|length }} Active Vouchers
+            </span>
+
+        </div>
+
+        <div class="overflow-x-auto">
+
+            <table class="table table-zebra">
+
+                <thead>
+                    <tr>
+                        <th>Voucher ID</th>
+                        <th>Promo Code</th>
+                        <th>Customer ID</th>
+                        <th>Discount Type</th>
+                        <th>Amount</th>
+                        <th>Expiry Date</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for voucher in vouchers %}
+
+                    <tr>
+                        <td>{{ voucher.voucher_id }}</td>
+
+                        <td class="font-semibold">
+                            {{ voucher.promo_code }}
+                        </td>
+
+                        <td>{{ voucher.customer_id }}</td>
+
+                        <td>
+                            {% if voucher.is_percentage %}
+                                <span class="badge badge-info">Percentage</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Fixed Amount</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if voucher.is_percentage %}
+                                {{ voucher.amount }}%
+                            {% else %}
+                                {{ voucher.amount }}
+                            {% endif %}
+                        </td>
+
+                        <td>{{ voucher.expiry_date }}</td>
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+                        <td colspan="6" class="text-center py-12">
+
+                            <div class="text-4xl mb-3">🎟️</div>
+
+                            <p class="font-semibold">
+                                No active vouchers
+                            </p>
+
+                            <p class="text-sm text-base-content/50 mt-1">
+                                Newly issued vouchers will appear here.
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Discount Type Validation -->
+<script>
+    const discountType = document.getElementById('discountType');
+    const discountAmount = document.getElementById('discountAmount');
+    const amountHint = document.getElementById('amountHint');
+
+    discountType.addEventListener('change', function () {
+
+        if (this.value === '1') {
+            discountAmount.min = '1';
+            discountAmount.max = '100';
+            amountHint.textContent = 'Enter a percentage between 1 and 100.';
+        }
+
+        else if (this.value === '0') {
+            discountAmount.min = '0.01';
+            discountAmount.removeAttribute('max');
+            amountHint.textContent = 'Enter a fixed discount amount greater than zero.';
+        }
+
+        else {
+            discountAmount.min = '0.01';
+            discountAmount.removeAttribute('max');
+            amountHint.textContent = 'Select a discount type first.';
+        }
+    });
+
+    // Prevent selecting an expiry date in the past.
+    const expiryDate = document.getElementById('expiryDate');
+    const today = new Date();
+    const localToday = new Date(
+        today.getTime() - today.getTimezoneOffset() * 60000
+    ).toISOString().split('T')[0];
+
+    expiryDate.min = localToday;
+</script>
+
+{% endblock %}

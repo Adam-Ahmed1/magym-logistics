@@ -1,8 +1,146 @@
+
 {% extends "base.html" %}
-{% block title %}Admin Home{% endblock %}
+
+{% block title %}Admin Dashboard | MAGYM Logistics{% endblock %}
 
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">🛡️ Admin Dashboard</h1>
-<p class="text-base-content/60">Welcome, {{ session.get('first_name') }}. Your admin pages go here.</p>
-<!-- TODO: Section 3.2 and 3.3 routes -->
+
+<div class="space-y-8">
+
+    <!-- Welcome Section -->
+    <div class="bg-base-100 rounded-2xl shadow-sm p-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <p class="text-sm font-semibold text-primary uppercase tracking-wider">
+                    Administration
+                </p>
+
+                <h1 class="text-3xl font-bold mt-2">
+                    Welcome back, {{ session.get('first_name', 'Admin') }}!
+                </h1>
+
+                <p class="text-base-content/60 mt-2">
+                    Manage businesses, customers, vouchers and platform operations.
+                </p>
+            </div>
+
+            <div class="badge badge-primary badge-lg p-4">
+                {{ session.get('admin_role', 'Admin') }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Overview -->
+    <div>
+        <h2 class="text-2xl font-bold">Management Overview</h2>
+        <p class="text-base-content/60 mt-1">
+            Select a section to manage your platform.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Business Approvals -->
+        <a href="{{ url_for('admin.business_approvals') }}"
+           class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+            <div class="card-body">
+                <div class="text-3xl">📋</div>
+                <h3 class="card-title">Business Approvals</h3>
+                <p class="text-base-content/60">
+                    Review pending business applications and approve or reject them.
+                </p>
+                <div class="card-actions justify-end mt-2">
+                    <span class="text-primary font-semibold">View Applications →</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- Business Management -->
+        <a href="{{ url_for('admin.business_management') }}"
+           class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+            <div class="card-body">
+                <div class="text-3xl">🏢</div>
+                <h3 class="card-title">Business Management</h3>
+                <p class="text-base-content/60">
+                    Browse registered businesses and manage their account status.
+                </p>
+                <div class="card-actions justify-end mt-2">
+                    <span class="text-primary font-semibold">View Businesses →</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- Admin Management -->
+        {% if session.get('admin_role') == 'Super Admin' %}
+        <a href="{{ url_for('admin.admin_management') }}"
+           class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+            <div class="card-body">
+                <div class="text-3xl">👥</div>
+                <h3 class="card-title">Admin Management</h3>
+                <p class="text-base-content/60">
+                    Create administrators and assign Zone Admins to zones.
+                </p>
+                <div class="card-actions justify-end mt-2">
+                    <span class="text-primary font-semibold">Manage Admins →</span>
+                </div>
+            </div>
+        </a>
+        {% endif %}
+
+        <!-- Voucher Management -->
+        <a href="{{ url_for('admin.voucher_management') }}"
+           class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+            <div class="card-body">
+                <div class="text-3xl">🎟️</div>
+                <h3 class="card-title">Voucher Management</h3>
+                <p class="text-base-content/60">
+                    Issue customer vouchers and view currently active vouchers.
+                </p>
+                <div class="card-actions justify-end mt-2">
+                    <span class="text-primary font-semibold">Manage Vouchers →</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- Customer Blacklist -->
+        <a href="{{ url_for('admin.customer_blacklist') }}"
+           class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+            <div class="card-body">
+                <div class="text-3xl">🚫</div>
+                <h3 class="card-title">Customer Blacklist</h3>
+                <p class="text-base-content/60">
+                    Manage blacklisted customers and restore their accounts.
+                </p>
+                <div class="card-actions justify-end mt-2">
+                    <span class="text-primary font-semibold">Manage Blacklist →</span>
+                </div>
+            </div>
+        </a>
+
+    </div>
+
+    <!-- Account Information -->
+    <div class="bg-base-100 rounded-2xl shadow-sm p-6">
+        <h2 class="text-lg font-bold mb-4">Your Account</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <p class="text-sm text-base-content/50">Username</p>
+                <p class="font-semibold">{{ session.get('username', '-') }}</p>
+            </div>
+
+            <div>
+                <p class="text-sm text-base-content/50">Admin Role</p>
+                <p class="font-semibold">{{ session.get('admin_role', 'Admin') }}</p>
+            </div>
+
+            <div>
+                <p class="text-sm text-base-content/50">Assigned Zone</p>
+                <p class="font-semibold">{{ session.get('admin_zone_name', 'All Zones') }}</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
 {% endblock %}

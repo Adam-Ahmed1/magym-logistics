@@ -13,10 +13,15 @@ code_to_msg = {
     -9: "Nothing to process. Please add items before proceeding."
 }
 
-def get_message(code: int, custom_messages: dict = None) -> str:
-    
-    if custom_messages and code in custom_messages and isinstance(custom_messages[code], str):
-            return custom_messages[code]
-        
-    return code_to_msg.get(code, "An unexpected error occurred. Please try again.")
 
+def get_message(code: int, custom_messages: dict = None) -> str:
+    if custom_messages and code in custom_messages:
+        message = custom_messages[code]
+
+        if isinstance(message, str):
+            return message
+
+    return code_to_msg.get(
+        code,
+        "An unexpected error occurred. Please try again."
+    )

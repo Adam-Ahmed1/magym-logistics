@@ -1,0 +1,133 @@
+
+{% extends "base.html" %}
+
+{% block title %}Business Approvals | MAGYM Logistics{% endblock %}
+
+{% block content %}
+
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div>
+        <a href="{{ url_for('admin.home') }}" class="btn btn-ghost btn-sm mb-3">
+            ← Back to Dashboard
+        </a>
+
+        <h1 class="text-3xl font-bold">Business Approvals</h1>
+
+        <p class="text-base-content/60 mt-2">
+            Review pending business applications and decide whether to approve or reject them.
+        </p>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="bg-base-100 rounded-2xl shadow-sm border border-base-300 p-6">
+
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-5">
+
+            <div>
+                <h2 class="text-xl font-bold">Pending Applications</h2>
+
+                <p class="text-sm text-base-content/60">
+                    Businesses waiting for administrative review.
+                </p>
+            </div>
+
+            <span class="badge badge-warning badge-lg">
+                {{ businesses|length }} Pending
+            </span>
+
+        </div>
+
+        <div class="overflow-x-auto">
+
+            <table class="table table-zebra">
+
+                <thead>
+                    <tr>
+                        <th>Business ID</th>
+                        <th>Business Name</th>
+                        <th>Business Type</th>
+                        <th>Zone</th>
+                        <th>Partner</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for business in businesses %}
+
+                    <tr>
+                        <td>{{ business.business_id }}</td>
+
+                        <td class="font-semibold">
+                            {{ business.business_name }}
+                        </td>
+
+                        <td>{{ business.business_type }}</td>
+
+                        <td>{{ business.zone_name }}</td>
+
+                        <td>{{ business.partner_name }}</td>
+
+                        <td>
+                            <div class="flex gap-2">
+
+                                <!-- Approve Form -->
+                                <form
+                                    action="{{ url_for('admin.approve_business', business_id=business.business_id) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('Are you sure you want to approve this business?');"
+                                >
+                                    <button type="submit" class="btn btn-success btn-xs">
+                                        Approve
+                                    </button>
+                                </form>
+
+                                <!-- Reject Form -->
+                                <form
+                                    action="{{ url_for('admin.reject_business', business_id=business.business_id) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('Are you sure you want to reject this business?');"
+                                >
+                                    <button type="submit" class="btn btn-error btn-xs">
+                                        Reject
+                                    </button>
+                                </form>
+
+                            </div>
+                        </td>
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+                        <td colspan="6" class="text-center py-12">
+
+                            <div class="text-4xl mb-3">📭</div>
+
+                            <p class="font-semibold">
+                                No pending applications
+                            </p>
+
+                            <p class="text-sm text-base-content/50 mt-1">
+                                New business applications will appear here.
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

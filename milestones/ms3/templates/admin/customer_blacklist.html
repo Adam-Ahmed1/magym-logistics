@@ -1,0 +1,180 @@
+
+{% extends "base.html" %}
+
+{% block title %}Customer Blacklist | MAGYM Logistics{% endblock %}
+
+{% block content %}
+
+<div class="space-y-8">
+
+    <!-- Page Header -->
+    <div>
+        <a href="{{ url_for('admin.home') }}" class="btn btn-ghost btn-sm mb-3">
+            ← Back to Dashboard
+        </a>
+
+        <h1 class="text-3xl font-bold">Customer Blacklist</h1>
+
+        <p class="text-base-content/60 mt-2">
+            Manage blacklisted customers and restore their accounts.
+        </p>
+    </div>
+
+    <!-- Blacklist Customer Form -->
+    <div class="bg-base-100 rounded-2xl shadow-sm border border-base-300 p-6">
+
+        <div class="mb-6">
+            <h2 class="text-xl font-bold">Blacklist a Customer</h2>
+            <p class="text-sm text-base-content/60 mt-1">
+                Select a customer and provide a reason for blacklisting.
+            </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.blacklist_customer') }}">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Customer *</span>
+                    </label>
+
+                    <select name="customer_id" required
+                            class="select select-bordered w-full">
+                        <option value="">Select a customer</option>
+
+                        {% for customer in customers %}
+                            <option value="{{ customer.customer_id }}">
+                                {{ customer.first_name }} {{ customer.last_name }}
+                                (ID: {{ customer.customer_id }})
+                            </option>
+                        {% endfor %}
+
+                    </select>
+                </div>
+
+                <div>
+                    <label class="label">
+                        <span class="label-text font-semibold">Reason *</span>
+                    </label>
+
+                    <input type="text"
+                           name="reason"
+                           maxlength="255"
+                           required
+                           class="input input-bordered w-full"
+                           placeholder="Enter reason for blacklisting">
+                </div>
+
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button type="submit" class="btn btn-error">
+                    Blacklist Customer
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Blacklisted Customers -->
+    <div class="bg-base-100 rounded-2xl shadow-sm border border-base-300 p-6">
+
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-5">
+
+            <div>
+                <h2 class="text-xl font-bold">Blacklisted Customers</h2>
+                <p class="text-sm text-base-content/60 mt-1">
+                    Customers whose accounts are currently blacklisted.
+                </p>
+            </div>
+
+            <span class="badge badge-error badge-lg">
+                {{ blacklisted_customers|length }} Blacklisted
+            </span>
+
+        </div>
+
+        <div class="overflow-x-auto">
+
+            <table class="table table-zebra">
+
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Customer Name</th>
+                        <th>Username</th>
+                        <th>Reason</th>
+                        <th>Blacklisted By</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for customer in blacklisted_customers %}
+
+                    <tr>
+                        <td>{{ customer.customer_id }}</td>
+
+                        <td class="font-semibold">
+                            {{ customer.first_name }} {{ customer.last_name }}
+                        </td>
+
+                        <td>{{ customer.username }}</td>
+
+                        <td class="max-w-xs whitespace-normal">
+                            {{ customer.reason }}
+                        </td>
+
+                        <td>{{ customer.admin_id }}</td>
+
+                        <td>
+                            {% if customer.admin_id == session.get('user_id') %}
+                                <form method="POST"
+                                      action="{{ url_for('admin.lift_customer_blacklist', customer_id=customer.customer_id) }}"
+                                      onsubmit="return confirm('Are you sure you want to restore this customer account?');">
+
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        Lift Blacklist
+                                    </button>
+
+                                </form>
+                            {% else %}
+                                <span class="text-xs text-base-content/50">
+                                    Only the original admin can lift
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% else %}
+
+                    <tr>
+                        <td colspan="6" class="text-center py-12">
+
+                            <div class="text-4xl mb-3">✅</div>
+
+                            <p class="font-semibold">
+                                No blacklisted customers
+                            </p>
+
+                            <p class="text-sm text-base-content/50 mt-1">
+                                All customer accounts are currently active.
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
