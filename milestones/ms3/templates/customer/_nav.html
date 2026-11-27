@@ -1,0 +1,24 @@
+{# Customer sub-navigation, shared by the customer pages. Links to Section 3.5
+   pages appear automatically once their routes exist. #}
+{% set nav_links = [
+    ('customer.home', 'Home', '🏠'),
+    ('customer.browse', 'Browse', '🔎'),
+    ('customer.favorites', 'Favorites', '❤️'),
+    ('customer.orders', 'My orders', '📦'),
+    ('customer.cart', 'Cart', '🛒'),
+    ('customer.addresses', 'Addresses', '📍'),
+] %}
+<div class="bg-base-100 rounded-2xl shadow-sm px-3 py-2 mb-6 overflow-x-auto">
+    <ul class="menu menu-horizontal flex-nowrap gap-1 p-0">
+        {% for endpoint, label, icon in nav_links %}
+            {% if has_endpoint(endpoint) %}
+            <li>
+                <a href="{{ url_for(endpoint) }}"
+                   class="{{ 'active' if request.endpoint == endpoint or (endpoint == 'customer.browse' and request.endpoint == 'customer.business_page') or (endpoint == 'customer.orders' and request.endpoint == 'customer.order_detail') }}">
+                    <span aria-hidden="true">{{ icon }}</span> {{ label }}
+                </a>
+            </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>

@@ -1,8 +1,52 @@
 {% extends "base.html" %}
-{% block title %}Customer Home{% endblock %}
+{% block title %}Customer Home | MAGYM Logistics{% endblock %}
 
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">🛒 Customer Dashboard</h1>
-<p class="text-base-content/60">Welcome, {{ session.get('first_name') }}. Your customer pages go here.</p>
-<!-- TODO: Section 3.5 and 3.6 routes -->
+{% include 'customer/_nav.html' %}
+
+<div class="space-y-8">
+
+    <div class="bg-base-100 rounded-2xl shadow-sm p-8">
+        <p class="text-sm font-semibold text-primary uppercase tracking-wider">Customer</p>
+        <h1 class="text-3xl font-bold mt-2">Welcome back, {{ session.get('first_name', 'there') }}!</h1>
+        <p class="text-base-content/60 mt-2">Find something you like, follow your orders and tell us how they went.</p>
+        <!-- TODO (Section 3.5.a): show my name, active address and wallet balance here. -->
+    </div>
+
+    <!-- TODO (Section 3.5): cards for addresses, cards, cart and checkout go here. -->
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <a href="{{ url_for('customer.browse') }}"
+           class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+            <div class="card-body">
+                <div class="text-3xl">🔎</div>
+                <h3 class="card-title">Browse businesses</h3>
+                <p class="text-base-content/60">Search by name or browse by product category, then open a business to see its menu.</p>
+                <div class="card-actions justify-end mt-2"><span class="text-primary font-semibold">Start browsing →</span></div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('customer.favorites') }}"
+           class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+            <div class="card-body">
+                <div class="text-3xl">❤️</div>
+                <h3 class="card-title">Favorites &amp; picks for you</h3>
+                <p class="text-base-content/60">Your saved businesses and products, and products recommended from what you order.</p>
+                <div class="card-actions justify-end mt-2"><span class="text-primary font-semibold">Open favorites →</span></div>
+            </div>
+        </a>
+
+        <a href="{{ url_for('customer.orders') }}"
+           class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+            <div class="card-body">
+                <div class="text-3xl">📦</div>
+                <h3 class="card-title">My orders</h3>
+                <p class="text-base-content/60">Where each order is now and when it will arrive. Cancel, reorder or leave feedback.</p>
+                <div class="card-actions justify-end mt-2"><span class="text-primary font-semibold">Track orders →</span></div>
+            </div>
+        </a>
+
+    </div>
+</div>
 {% endblock %}
