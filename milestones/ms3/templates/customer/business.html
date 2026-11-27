@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% import 'customer/_macros.html' as ui with context %}
+{% block title %}{{ b.business_name }} | MAGYM Logistics{% endblock %}
+
+{% block content %}
+{% include 'customer/_nav.html' %}
+
+<div class="space-y-6">
+
+    <div class="text-sm breadcrumbs">
+        <ul>
+            <li><a href="{{ url_for('customer.browse') }}">Browse</a></li>
+            <li>{{ b.business_name }}</li>
+        </ul>
+    </div>
+
+    <!-- Business header: h_BusinessDetails + BusinessRatingsSummary -->
+    <div class="bg-base-100 rounded-2xl shadow-sm p-6 md:p-8">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div class="space-y-2">
+                <h1 class="text-3xl font-bold">{{ b.business_name }}</h1>
+                {% if b.description %}<p class="text-base-content/70 max-w-2xl">{{ b.description }}</p>{% endif %}
+                <div class="flex flex-wrap items-center gap-2 pt-1">
+                    {{ ui.open_badge(b.is_open_now, b.opening_hour, b.closing_hour) }}
+                    <span class="badge badge-outline">{{ b.zone_name }}</span>
+                    {% if delivers_to_me %}
+                        <span class="badge badge-primary badge-outline">Delivers to your active address</span>
+                    {% elif profile and profile.active_zone %}
+                        <span class="badge badge-warning badge-outline">Does not deliver to {{ profile.active_zone }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                {{ ui.fav_button('Business', b.business_id, b.business_name, favorite_business, 'btn-md') }}
+                {% if b.link_website %}
+                    <a href="{{ b.link_website if '://' in b.link_website else 'https://' ~ b.link_website }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-md">Website ↗</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="stats stats-vertical sm:stats-horizontal bg-base-200 w-full mt-6">
+            <div class="stat">
+                <div class="stat-title">Rating</div>
+                <div class="stat-value text-2xl">
+                    {% if rating.avg_rating is not none and rating.ratings_count %}{{ '%.1f' | format(rating.avg_rating | float) }} <span class="text-warning">★</span>{% else %}—{% endif %}
+                </div>
+                <div class="stat-desc">{{ rating.ratings_count or 0 }} review{{ 's' if (rating.ratings_count or 0) != 1 }}</div>
+            </div>
+            <div class="stat">
+                <div class="stat-title">Opening hours</div>
+                <div class="stat-value text-2xl">{{ b.opening_hour | hm }} – {{ b.closing_hour | hm }}</div>
+                <div class="stat-desc">{{ 'Open now' if b.is_open_now else 'Closed right now' }}</div>
+            </div>
+            <div class="stat">
+                <div class="stat-title">Expected delivery</div>
+                <div class="stat-value text-2xl">~{{ b.expected_delivery_time }} min</div>
+                <div class="stat-desc">from order to your door</div>
+            </div>
+        </div>
+    </div>
+
+    {% if b.status != 'Active' %}
+        <div class="alert alert-warning">
+            <span>{{ b.business_name }} is not taking orders right now ({{ b.status | lower }}). You can keep it in your favorites and come back later.</span>
+        </div>
+    {% elif not delivers_to_me and profile and profile.active_zone %}
+        <div class="alert alert-info">
+            <span>This business is in {{ b.zone_name }} and your active address is in {{ profile.active_zone }}. To order from it, change your active address to one in {{ b.zone_name }}.</span>
+        </div>
+    {% endif %}
+
+    <!-- Available products: h_BusinessProducts -->
+    <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold">Menu</h2>
+        <span class="text-base-content/60 text-sm">{{ product_count }} available product{{ 's' if product_count != 1 }}</span>
+    </div>
+
+    {% if grouped %}
+        {% for cat, items in grouped.items() %}
+        <section class="space-y-3">
+            <h3 class="text-lg font-semibold text-base-content/80">{{ cat }}</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for p in items %}
+                <div class="card bg-base-100 shadow-sm border border-base-300">
+                    <div class="card-body p-5 gap-2">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <h4 class="font-semibold text-lg">{{ p.product_name }}</h4>
+                                {% if p.description %}<p class="text-sm text-base-content/60">{{ p.description }}</p>{% endif %}
+                            </div>
+                            {{ ui.fav_button('Product', p.product_id, p.product_name, p.product_id in favorite_products) }}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg font-bold">{{ p.final_price | egp }}</span>
+                            {% if p.discount_amount and p.discount_amount > 0 %}
+                                <span class="line-through text-base-content/40 text-sm">{{ p.price | egp }}</span>
+                                <span class="badge badge-success badge-sm">Save {{ p.discount_amount | egp }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if has_endpoint('customer.add_to_cart') and delivers_to_me and b.status == 'Active' %}
+                        <!-- Section 3.5.d: Add_To_Cart (handled by the cart routes) -->
+                        <form method="post" action="{{ url_for('customer.add_to_cart') }}" class="flex flex-wrap items-end gap-2 mt-1">
+                            <input type="hidden" name="product_id" value="{{ p.product_id }}">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <label class="form-control w-20">
+                                <span class="label-text text-xs">Qty</span>
+                                <input type="number" name="quantity" min="1" max="10" value="1" required class="input input-bordered input-sm">
+                            </label>
+                            <label class="form-control flex-1 min-w-32">
+                                <span class="label-text text-xs">Note (optional)</span>
+                                <input type="text" name="notes" maxlength="255" placeholder="e.g. no onions" class="input input-bordered input-sm">
+                            </label>
+                            <button type="submit" class="btn btn-primary btn-sm">Add to cart</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+    {% else %}
+        <div class="bg-base-100 rounded-2xl p-10 text-center text-base-content/60">
+            No products are available from {{ b.business_name }} right now.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

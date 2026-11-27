@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Edit address | MAGYM Logistics{% endblock %}
+
+{% block content %}
+{% include 'customer/_nav.html' %}
+
+<div class="max-w-xl mx-auto space-y-6">
+
+    <div class="text-sm breadcrumbs">
+        <ul>
+            <li><a href="{{ url_for('customer.addresses') }}">My addresses</a></li>
+            <li>Edit</li>
+        </ul>
+    </div>
+
+    <!-- 3.5.b: Update_Delete_Customer_Address with action 'Update' -->
+    <div class="bg-base-100 rounded-2xl shadow-sm p-6">
+        <h1 class="text-2xl font-bold">Edit address</h1>
+        {% if address.is_active %}<span class="badge badge-primary mt-2">Active address</span>{% endif %}
+
+        <form method="post" class="space-y-4 mt-4">
+            <label class="form-control">
+                <span class="label-text font-semibold mb-1">Description *</span>
+                <input type="text" name="description" maxlength="150" required
+                       value="{{ address.description }}" class="input input-bordered w-full">
+            </label>
+            <label class="form-control">
+                <span class="label-text font-semibold mb-1">Zone *</span>
+                <select name="zone_id" required class="select select-bordered w-full">
+                    {% for z in zones %}
+                        <option value="{{ z.zone_id }}" {{ 'selected' if z.zone_id == address.zone_id }}>{{ z.zone_name }} — delivery {{ z.delivery_fee | egp }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <p class="text-xs text-base-content/50">Changing the zone changes which businesses can deliver to this address.</p>
+            <div class="flex gap-2">
+                <button type="submit" class="btn btn-primary">Save changes</button>
+                <a href="{{ url_for('customer.addresses') }}" class="btn btn-ghost">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

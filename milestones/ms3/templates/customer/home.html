@@ -1,8 +1,127 @@
 {% extends "base.html" %}
-{% block title %}Customer Home{% endblock %}
+{% block title %}Customer Home | MAGYM Logistics{% endblock %}
 
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">🛒 Customer Dashboard</h1>
-<p class="text-base-content/60">Welcome, {{ session.get('first_name') }}. Your customer pages go here.</p>
-<!-- TODO: Section 3.5 and 3.6 routes -->
+{% include 'customer/_nav.html' %}
+
+<div class="space-y-8">
+
+    <!-- 3.5.a: my name, my active address and my wallet balance (h_CustomerProfile) -->
+    <div class="bg-base-100 rounded-2xl shadow-sm p-8">
+        <p class="text-sm font-semibold text-primary uppercase tracking-wider">Customer</p>
+        <h1 class="text-3xl font-bold mt-2">
+            Welcome back, {{ profile.customer_name if profile else session.get('first_name', 'there') }}!
+        </h1>
+        <p class="text-base-content/60 mt-2">Find something you like, follow your orders and tell us how they went.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div class="rounded-xl border border-base-300 p-5">
+                <p class="text-sm text-base-content/60">📍 Delivering to</p>
+                {% if profile and profile.active_address %}
+                    <p class="text-xl font-semibold mt-1">{{ profile.active_address }}</p>
+                    <p class="text-base-content/60">{{ profile.active_zone }}</p>
+                    <a href="{{ url_for('customer.addresses') }}" class="link link-primary text-sm mt-2 inline-block">Change address</a>
+                {% else %}
+                    <p class="text-lg font-semibold mt-1">You don't have a delivery address yet.</p>
+                    <p class="text-base-content/60 text-sm">Add one so we can show the businesses that deliver to you.</p>
+                    <a href="{{ url_for('customer.addresses') }}" class="btn btn-primary btn-sm mt-3">Add an address</a>
+                {% endif %}
+            </div>
+
+            <div class="rounded-xl border border-base-300 p-5">
+                <p class="text-sm text-base-content/60">👛 Wallet balance</p>
+                <p class="text-3xl font-bold mt-1">{{ (profile.wallet_balance if profile else 0) | egp }}</p>
+                <p class="text-base-content/60 text-sm mt-1">Pay with it at checkout. Refunds of cancelled orders come back here.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3.5: account, cart and checkout -->
+    <div>
+        <h2 class="text-xl font-bold mb-3">Your account</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <a href="{{ url_for('customer.cart') }}"
+               class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+                <div class="card-body">
+                    <div class="text-3xl">🛒</div>
+                    <h3 class="card-title">My cart
+                        {% if cart_count %}<span class="badge badge-primary">{{ cart_count }}</span>{% endif %}
+                    </h3>
+                    <p class="text-base-content/60">
+                        {% if cart_count %}{{ cart_count }} item{{ 's' if cart_count != 1 }} waiting. Review them and check out.
+                        {% else %}Your cart for your active address, and checkout.{% endif %}
+                    </p>
+                    <div class="card-actions justify-end mt-2"><span class="text-primary font-semibold">Open cart →</span></div>
+                </div>
+            </a>
+
+            <a href="{{ url_for('customer.addresses') }}"
+               class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+                <div class="card-body">
+                    <div class="text-3xl">📍</div>
+                    <h3 class="card-title">My addresses</h3>
+                    <p class="text-base-content/60">Add, edit or delete addresses and choose which one we deliver to.</p>
+                    <div class="card-actions justify-end mt-2"><span class="text-primary font-semibold">Manage addresses →</span></div>
+                </div>
+            </a>
+
+            <a href="{{ url_for('customer.cards') }}"
+               class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+                <div class="card-body">
+                    <div class="text-3xl">💳</div>
+                    <h3 class="card-title">My cards
+                        {% if cards_count %}<span class="badge badge-ghost">{{ cards_count }}</span>{% endif %}
+                    </h3>
+                    <p class="text-base-content/60">Save a card to pay with at checkout. We only ever show its last 4 digits.</p>
+                    <div class="card-actions justify-end mt-2"><span class="text-primary font-semibold">Manage cards →</span></div>
+                </div>
+            </a>
+
+        </div>
+        {% if vouchers_count %}
+        <div class="alert mt-4">
+            <span>🎟️ You have {{ vouchers_count }} voucher{{ 's' if vouchers_count != 1 }} you can use at checkout.</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 3.6: browsing, favorites and orders -->
+    <div>
+        <h2 class="text-xl font-bold mb-3">Shop and track</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <a href="{{ url_for('customer.browse') }}"
+               class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+                <div class="card-body">
+                    <div class="text-3xl">🔎</div>
+                    <h3 class="card-title">Browse businesses</h3>
+                    <p class="text-base-content/60">Search by name or browse by product category, then open a business to see its menu.</p>
+                    <div class="card-actions justify-end mt-2"><span class="text-primary font-semibold">Start browsing →</span></div>
+                </div>
+            </a>
+
+            <a href="{{ url_for('customer.favorites') }}"
+               class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+                <div class="card-body">
+                    <div class="text-3xl">❤️</div>
+                    <h3 class="card-title">Favorites &amp; picks for you</h3>
+                    <p class="text-base-content/60">Your saved businesses and products, and products recommended from what you order.</p>
+                    <div class="card-actions justify-end mt-2"><span class="text-primary font-semibold">Open favorites →</span></div>
+                </div>
+            </a>
+
+            <a href="{{ url_for('customer.orders') }}"
+               class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-lg hover:border-primary transition-all">
+                <div class="card-body">
+                    <div class="text-3xl">📦</div>
+                    <h3 class="card-title">My orders</h3>
+                    <p class="text-base-content/60">Where each order is now and when it will arrive. Cancel, reorder or leave feedback.</p>
+                    <div class="card-actions justify-end mt-2"><span class="text-primary font-semibold">Track orders →</span></div>
+                </div>
+            </a>
+
+        </div>
+    </div>
+</div>
 {% endblock %}

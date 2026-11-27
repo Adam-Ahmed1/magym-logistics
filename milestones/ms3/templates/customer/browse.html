@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% import 'customer/_macros.html' as ui with context %}
+{% block title %}Browse | MAGYM Logistics{% endblock %}
+
+{% block content %}
+{% include 'customer/_nav.html' %}
+
+<div class="space-y-6">
+
+    <div class="bg-base-100 rounded-2xl shadow-sm p-6 md:p-8">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2 mb-6">
+            <div>
+                <h1 class="text-3xl font-bold">Find a business</h1>
+                <p class="text-base-content/60 mt-1">
+                    {% if has_address %}
+                        Delivering to <strong>{{ profile.active_address }}</strong>
+                        <span class="badge badge-outline ml-1">{{ profile.active_zone }}</span>
+                    {% else %}
+                        You have no active delivery address yet.
+                        {% if has_endpoint('customer.addresses') %}<a class="link link-primary" href="{{ url_for('customer.addresses') }}">Add one</a>{% else %}Add one from your account{% endif %}
+                        to see who delivers to you.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Search by name: Search_Platform -->
+            <form method="get" action="{{ url_for('customer.browse') }}" class="space-y-2">
+                <label for="q" class="font-semibold">Search by business name</label>
+                <div class="join w-full">
+                    <input id="q" name="q" type="search" value="{{ keyword }}" required maxlength="100"
+                           placeholder="e.g. Pizza, Pharmacy, Koshary…"
+                           class="input input-bordered join-item w-full" {{ 'disabled' if not has_address }}>
+                    <button type="submit" class="btn btn-primary join-item" {{ 'disabled' if not has_address }}>Search</button>
+                </div>
+                <p class="text-xs text-base-content/50">Shows businesses that deliver to your active address. Exact matches come first.</p>
+            </form>
+
+            <!-- Browse by category: Nearby_Businesses_By_Category -->
+            <form method="get" action="{{ url_for('customer.browse') }}" class="space-y-2">
+                <label for="category" class="font-semibold">Or browse by product category</label>
+                <div class="join w-full">
+                    <select id="category" name="category" required class="select select-bordered join-item w-full" {{ 'disabled' if not has_address }}>
+                        <option value="" disabled {{ 'selected' if not category }}>Choose a category</option>
+                        {% for c in categories %}
+                            <option value="{{ c.category }}" {{ 'selected' if c.category == category }}>
+                                {{ c.category }} ({{ c.business_count }} business{{ 'es' if c.business_count != 1 }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary join-item" {{ 'disabled' if not has_address }}>Browse</button>
+                </div>
+                <p class="text-xs text-base-content/50">Businesses in your zone come first, then the fastest zones.</p>
+            </form>
+        </div>
+    </div>
+
+    {% if mode %}
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-bold">
+                {% if mode == 'search' %}
+                    {{ results | length }} result{{ 's' if results | length != 1 }} for “{{ keyword }}”
+                {% else %}
+                    {{ results | length }} business{{ 'es' if results | length != 1 }} selling {{ category }}
+                {% endif %}
+            </h2>
+            <a href="{{ url_for('customer.browse') }}" class="btn btn-ghost btn-sm">Clear</a>
+        </div>
+
+        {% if results %}
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {% for b in results %}
+            <div class="card bg-base-100 shadow-sm border border-base-300 hover:shadow-md transition-all">
+                <div class="card-body gap-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <h3 class="card-title text-lg">
+                                <a class="link link-hover" href="{{ url_for('customer.business_page', business_id=b.business_id) }}">{{ b.business_name }}</a>
+                            </h3>
+                            <div class="mt-1">{{ ui.stars(b.avg_rating, b.ratings_count) }}</div>
+                        </div>
+                        {{ ui.fav_button('Business', b.business_id, b.business_name, b.business_id in favorite_ids) }}
+                    </div>
+
+                    {% if b.description %}<p class="text-sm text-base-content/70 line-clamp-2">{{ b.description }}</p>{% endif %}
+
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        {{ ui.open_badge(b.is_open_now, b.opening_hour, b.closing_hour) }}
+                        {% if b.same_zone %}
+                            <span class="badge badge-primary badge-outline">Delivers to you</span>
+                        {% else %}
+                            <span class="badge badge-warning badge-outline" title="This business is in another zone, so it cannot deliver to your active address.">Outside your zone · {{ b.zone_name }}</span>
+                        {% endif %}
+                        <span class="badge badge-ghost">~{{ b.expected_delivery_time }} min</span>
+                        {% if b.zone_avg_delivery_time is defined and b.zone_avg_delivery_time is not none %}
+                            <span class="badge badge-ghost" title="Average rider time from pickup to door in {{ b.zone_name }}">Zone rides ~{{ '%.0f' | format(b.zone_avg_delivery_time | float) }} min</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-actions justify-end">
+                        <a href="{{ url_for('customer.business_page', business_id=b.business_id) }}" class="btn btn-primary btn-sm">View menu →</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-base-100 rounded-2xl p-10 text-center text-base-content/60">
+            <div class="text-4xl mb-2">🤷</div>
+            {% if mode == 'search' %}
+                No business in {{ profile.active_zone if profile else 'your zone' }} matches “{{ keyword }}”. Try a shorter word, or browse by category.
+            {% else %}
+                No open business sells {{ category }} right now. Try another category.
+            {% endif %}
+        </div>
+        {% endif %}
+
+    {% elif categories and has_address %}
+        <div>
+            <h2 class="text-xl font-bold mb-3">Popular categories</h2>
+            <div class="flex flex-wrap gap-2">
+                {% for c in categories %}
+                    <a href="{{ url_for('customer.browse', category=c.category) }}" class="btn btn-outline btn-sm rounded-full">
+                        {{ c.category }} <span class="badge badge-sm">{{ c.business_count }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

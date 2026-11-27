@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% import 'customer/_macros.html' as ui with context %}
+{% block title %}Favorites | MAGYM Logistics{% endblock %}
+
+{% block content %}
+{% include 'customer/_nav.html' %}
+
+<div class="space-y-8">
+
+    <div>
+        <h1 class="text-3xl font-bold">Favorites</h1>
+        <p class="text-base-content/60 mt-1">Tap the heart on any business or product to save it here, and tap it again to remove it.</p>
+    </div>
+
+    <!-- Recommended_Products -->
+    <section class="bg-base-100 rounded-2xl shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold">✨ Recommended for you</h2>
+            <span class="text-xs text-base-content/50">From the categories you order most, in your active zone</span>
+        </div>
+        {% if recommended %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                {% for r in recommended %}
+                <div class="card bg-base-200 border border-base-300">
+                    <div class="card-body p-4 gap-1">
+                        <div class="flex items-start justify-between gap-1">
+                            <span class="badge badge-ghost badge-sm">{{ r.category }}</span>
+                            {{ ui.fav_button('Product', r.product_id, r.product_name, r.product_id in favorite_product_ids, 'btn-xs') }}
+                        </div>
+                        <h3 class="font-semibold leading-snug">{{ r.product_name }}</h3>
+                        <p class="text-sm text-base-content/60">{{ r.business_name }}</p>
+                        <div class="flex items-center justify-between mt-2">
+                            <span class="font-bold">{{ r.final_price | egp }}</span>
+                            {% if r.business_id %}
+                                <a href="{{ url_for('customer.business_page', business_id=r.business_id) }}" class="link link-primary text-sm">View →</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-base-content/60">No recommendations yet. Once you place an order, we suggest new products from the categories you like, in your active address's zone.</p>
+        {% endif %}
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- My_Favorites (products) -->
+        <section class="bg-base-100 rounded-2xl shadow-sm p-6">
+            <h2 class="text-xl font-bold mb-4">❤️ Favorite products <span class="badge">{{ fav_products | length }}</span></h2>
+            {% if fav_products %}
+            <ul class="divide-y divide-base-200">
+                {% for f in fav_products %}
+                <li class="py-3 flex items-center justify-between gap-3">
+                    <div>
+                        <p class="font-semibold">{{ f.product_name }}</p>
+                        <p class="text-sm text-base-content/60">
+                            {% if f.business_id %}<a class="link link-hover" href="{{ url_for('customer.business_page', business_id=f.business_id) }}">{{ f.business_name }}</a>{% else %}{{ f.business_name }}{% endif %}
+                            {% if f.is_orderable %}
+                                · <span class="text-success">Available</span>
+                            {% else %}
+                                · <span class="text-warning">Not available right now</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    {{ ui.fav_button('Product', f.product_id, f.product_name, True) }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+                <p class="text-base-content/60">No favorite products yet. <a class="link link-primary" href="{{ url_for('customer.browse') }}">Browse businesses</a> and tap ♡ on a product.</p>
+            {% endif %}
+        </section>
+
+        <!-- Favorite businesses (h_MyFavoriteBusinesses) -->
+        <section class="bg-base-100 rounded-2xl shadow-sm p-6">
+            <h2 class="text-xl font-bold mb-4">🏪 Favorite businesses <span class="badge">{{ fav_businesses | length }}</span></h2>
+            {% if fav_businesses %}
+            <ul class="divide-y divide-base-200">
+                {% for f in fav_businesses %}
+                <li class="py-3 flex items-center justify-between gap-3">
+                    <div>
+                        <a class="font-semibold link link-hover" href="{{ url_for('customer.business_page', business_id=f.business_id) }}">{{ f.business_name }}</a>
+                        <p class="text-sm text-base-content/60">
+                            {{ f.zone_name }}
+                            {% if not f.is_orderable %}· <span class="text-warning">Not taking orders ({{ f.status | lower }})</span>{% endif %}
+                        </p>
+                    </div>
+                    {{ ui.fav_button('Business', f.business_id, f.business_name, True) }}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+                <p class="text-base-content/60">No favorite businesses yet. Tap ♡ on a business to save it.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

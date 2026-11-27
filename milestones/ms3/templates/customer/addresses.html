@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}My addresses | MAGYM Logistics{% endblock %}
+
+{% block content %}
+{% include 'customer/_nav.html' %}
+
+<div class="space-y-6">
+
+    <div>
+        <h1 class="text-3xl font-bold">My addresses</h1>
+        <p class="text-base-content/60 mt-1">We deliver to your <strong>active</strong> address. Your cart and the businesses you can order from follow it.</p>
+    </div>
+
+    <!-- 3.5.b: list (h_MyAddresses) with edit / delete / make active -->
+    <div class="bg-base-100 rounded-2xl shadow-sm p-6">
+        {% if addresses %}
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr><th>Address</th><th>Zone</th><th></th><th class="text-right">Actions</th></tr>
+                </thead>
+                <tbody>
+                {% for a in addresses %}
+                    <tr class="{{ 'bg-primary/5' if a.is_active }}">
+                        <td class="font-medium">{{ a.description }}</td>
+                        <td>{{ a.zone_name }}</td>
+                        <td>{% if a.is_active %}<span class="badge badge-primary">Active</span>{% endif %}</td>
+                        <td>
+                            <div class="flex flex-wrap justify-end gap-2">
+                                {% if not a.is_active %}
+                                <form method="post" action="{{ url_for('customer.activate_address', address_id=a.address_id) }}">
+                                    <button type="submit" class="btn btn-sm btn-primary btn-outline">Make active</button>
+                                </form>
+                                {% endif %}
+                                <a href="{{ url_for('customer.edit_address', address_id=a.address_id) }}" class="btn btn-sm btn-ghost">Edit</a>
+                                <form method="post" action="{{ url_for('customer.delete_address', address_id=a.address_id) }}"
+                                      onsubmit="return confirm({{ ('Delete \"' ~ a.description ~ '\"? This cannot be undone.' ~ (' Your oldest remaining address will become your active address.' if a.is_active else '')) | tojson | forceescape }});">
+                                    <button type="submit" class="btn btn-sm btn-ghost text-error">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-xs text-base-content/50 mt-3">An address that has carts or orders linked to it can be edited but not deleted. An address with an order on its way can't be changed until the order arrives.</p>
+        {% else %}
+        <div class="text-center py-8">
+            <div class="text-4xl">📍</div>
+            <p class="text-lg font-semibold mt-2">You don't have any addresses yet.</p>
+            <p class="text-base-content/60">Add your first one below. It becomes your active address.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 3.5.b: Add_Customer_Address -->
+    <div class="bg-base-100 rounded-2xl shadow-sm p-6">
+        <h2 class="text-xl font-bold">Add an address</h2>
+        <p class="text-base-content/60 text-sm mt-1">The new address becomes your active address.</p>
+        <form method="post" action="{{ url_for('customer.add_address') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 items-end">
+            <label class="form-control md:col-span-2">
+                <span class="label-text font-semibold mb-1">Description *</span>
+                <input type="text" name="description" maxlength="150" required
+                       placeholder="e.g. Home, 12 Street 9, apartment 4"
+                       class="input input-bordered w-full">
+            </label>
+            <label class="form-control">
+                <span class="label-text font-semibold mb-1">Zone *</span>
+                <select name="zone_id" required class="select select-bordered w-full">
+                    <option value="" disabled selected>Pick a zone</option>
+                    {% for z in zones %}
+                        <option value="{{ z.zone_id }}">{{ z.zone_name }} — delivery {{ z.delivery_fee | egp }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <div class="md:col-span-3">
+                <button type="submit" class="btn btn-primary">Add address</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% import 'customer/_macros.html' as ui with context %}
+{% block title %}My Orders | MAGYM Logistics{% endblock %}
+
+{% macro order_card(o, live) %}
+<div class="card bg-base-100 shadow-sm border {{ 'border-primary/40' if live else 'border-base-300' }}">
+    <div class="card-body gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+            <div>
+                <h3 class="card-title">
+                    Order #{{ o.order_id }} {{ ui.status_badge(o.status) }}
+                </h3>
+                <p class="text-sm text-base-content/60">
+                    {{ o.order_date | dt }} · {{ o.zone_name }} · {{ o.number_of_suborders }} part{{ 's' if o.number_of_suborders != 1 }} · {{ o.payment_method or 'Unpaid' }}
+                </p>
+            </div>
+            <div class="text-right">
+                <p class="text-xl font-bold">{{ o.total_amount | egp }}</p>
+                {% if o.refunded_amount and o.refunded_amount > 0 %}
+                    <p class="text-xs text-success">{{ o.refunded_amount | egp }} refunded</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if live and o.eta %}
+            <div class="rounded-xl bg-primary/10 p-4">
+                {% if o.eta_minutes is not none and o.eta_minutes > 0 %}
+                    <p class="text-lg font-bold">🛵 Everything should arrive in about {{ o.eta_minutes }} min</p>
+                    <p class="text-sm text-base-content/70">Estimated arrival around {{ o.eta | dt('%I:%M %p') }}</p>
+                {% else %}
+                    <p class="text-lg font-bold">🛵 Arriving any minute now</p>
+                    <p class="text-sm text-base-content/70">It was expected around {{ o.eta | dt('%I:%M %p') }}, so it is running a little late.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div class="space-y-4">
+            {% for p in o.parts %}
+            <div class="rounded-xl border border-base-200 p-4 space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="font-semibold">{{ p.business_name }}
+                        {% if p.rider_name %}<span class="font-normal text-sm text-base-content/60">· rider {{ p.rider_name }}</span>{% endif %}
+                    </div>
+                    {{ ui.status_badge(p.status) }}
+                </div>
+                {{ ui.journey(p) }}
+                {{ ui.eta_line(p) }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="card-actions justify-end">
+            {% if o.needs_feedback %}<span class="badge badge-warning badge-outline self-center">Feedback waiting</span>{% endif %}
+            <a href="{{ url_for('customer.order_detail', order_id=o.order_id) }}" class="btn btn-sm btn-primary">
+                {{ 'Details, cancel or reorder' if live else 'Details, feedback or reorder' }} →
+            </a>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% block content %}
+{% include 'customer/_nav.html' %}
+
+<div class="space-y-8">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
+        <div>
+            <h1 class="text-3xl font-bold">My orders</h1>
+            <p class="text-base-content/60 mt-1">Where each order is now, and when it will arrive.</p>
+        </div>
+        <p class="text-xs text-base-content/50">Updated {{ now | dt('%I:%M %p') }} · <a class="link" href="{{ url_for('customer.orders') }}">Refresh</a></p>
+    </div>
+
+    <section class="space-y-4">
+        <h2 class="text-xl font-bold">On the way <span class="badge badge-primary">{{ on_the_way | length }}</span></h2>
+        {% for o in on_the_way %}
+            {{ order_card(o, True) }}
+        {% else %}
+            <div class="bg-base-100 rounded-2xl p-8 text-center text-base-content/60">
+                Nothing on the way right now. <a class="link link-primary" href="{{ url_for('customer.browse') }}">Find something to order</a>.
+            </div>
+        {% endfor %}
+    </section>
+
+    <section class="space-y-4">
+        <h2 class="text-xl font-bold">Past orders <span class="badge">{{ past | length }}</span></h2>
+        {% for o in past %}
+            {{ order_card(o, False) }}
+        {% else %}
+            <p class="text-base-content/60">No past orders yet.</p>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

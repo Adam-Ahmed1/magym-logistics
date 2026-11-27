@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Review your order | MAGYM Logistics{% endblock %}
+
+{% block content %}
+{% include 'customer/_nav.html' %}
+
+<div class="space-y-6 max-w-4xl">
+
+    <div class="text-sm breadcrumbs">
+        <ul>
+            <li><a href="{{ url_for('customer.cart') }}">Cart</a></li>
+            <li><a href="{{ url_for('customer.checkout', payment_method=method, card_id=card.card_id if card else '', voucher_id=voucher.voucher_id if voucher else '') }}">Payment</a></li>
+            <li class="font-semibold">Review &amp; confirm</li>
+        </ul>
+    </div>
+
+    <div>
+        <h1 class="text-3xl font-bold">What you will pay, and why</h1>
+        <p class="text-base-content/60 mt-1">Delivering to <strong>{{ profile.active_address }}</strong> ({{ profile.active_zone }}).</p>
+    </div>
+
+    {% if problems %}
+    <div class="alert alert-warning">
+        <div>
+            <p class="font-semibold">This order will be refused until you fix these:</p>
+            <ul class="list-disc ml-5 text-sm">{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if wallet_short %}
+    <div class="alert alert-error">
+        <span>Your wallet has {{ wallet | egp }}, which is not enough for {{ bd.total | egp }}.
+            <a class="link" href="{{ url_for('customer.checkout', payment_method='Cash', voucher_id=voucher.voucher_id if voucher else '') }}">Choose Cash or Card</a>.</span>
+    </div>
+    {% endif %}
+
+    <!-- 3.5.e: the total, built from each business, the delivery fees and the voucher -->
+    <div class="bg-base-100 rounded-2xl shadow-sm p-6">
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr><th>What</th><th>Why</th><th class="text-right">Amount</th></tr>
+                </thead>
+                <tbody>
+                {% for g in groups %}
+                    <tr>
+                        <td class="font-semibold">{{ g.business_name }}</td>
+                        <td class="text-sm text-base-content/70">
+                            {% for i in g['items'] %}{{ i.quantity }} × {{ i.product_name }} ({{ i.unit_price | egp }}){{ ', ' if not loop.last }}{% endfor %}
+                        </td>
+                        <td class="text-right whitespace-nowrap">{{ g.subtotal | egp }}</td>
+                    </tr>
+                    <tr class="text-base-content/70">
+                        <td class="pl-8">Delivery from {{ g.business_name }}</td>
+                        <td class="text-sm">{{ profile.active_zone }} delivery fee</td>
+                        <td class="text-right whitespace-nowrap">{{ bd.zone_fee | egp }}</td>
+                    </tr>
+                {% endfor %}
+                    <tr class="border-t-2">
+                        <td>Items subtotal</td>
+                        <td class="text-sm text-base-content/70">All products above</td>
+                        <td class="text-right whitespace-nowrap">{{ bd.items_subtotal | egp }}</td>
+                    </tr>
+                    <tr>
+                        <td>Delivery fees</td>
+                        <td class="text-sm text-base-content/70">{{ bd.business_count }} business{{ 'es' if bd.business_count != 1 }} × {{ bd.zone_fee | egp }} — each business delivers separately</td>
+                        <td class="text-right whitespace-nowrap">{{ bd.fees | egp }}</td>
+                    </tr>
+                    {% if voucher %}
+                    <tr class="text-success">
+                        <td>Voucher {{ voucher.promo_code }}</td>
+                        <td class="text-sm">
+                            {% if voucher.is_percentage %}{{ '%g' | format(voucher.amount | float) }}% of the items subtotal{% else %}{{ voucher.amount | egp }} off the items{% endif %}{% if bd.capped %} (capped at the items subtotal){% endif %}
+                        </td>
+                        <td class="text-right whitespace-nowrap">− {{ bd.discount | egp }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr class="text-lg font-bold border-t-2">
+                        <td>Total to pay</td>
+                        <td class="text-sm font-normal text-base-content/70">
+                            {{ bd.items_subtotal | egp }} + {{ bd.fees | egp }}{% if voucher %} − {{ bd.discount | egp }}{% endif %}
+                        </td>
+                        <td class="text-right whitespace-nowrap">{{ bd.total | egp }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 text-sm text-base-content/70">
+            Paying with
+            {% if method == 'Cash' %}<strong>cash</strong> on delivery.
+            {% elif method == 'Card' %}<strong>your card ending in {{ card.last_four_digits }}</strong>.
+            {% else %}<strong>your wallet</strong>: {{ wallet | egp }} now, {{ (wallet - bd.total) | egp }} after this order.{% endif %}
+            {% if not voucher %}No voucher applied.{% endif %}
+        </div>
+    </div>
+
+    <!-- Confirm: Checkout_Cart recalculates the total itself; only the choices are sent. -->
+    <form method="post" action="{{ url_for('customer.checkout_confirm') }}"
+          onsubmit="var b=this.querySelector('button[type=submit]'); b.disabled=true; b.textContent='Placing your order…';"
+          class="flex flex-wrap gap-3 justify-end">
+        <input type="hidden" name="payment_method" value="{{ method }}">
+        <input type="hidden" name="card_id" value="{{ card.card_id if card else '' }}">
+        <input type="hidden" name="voucher_id" value="{{ voucher.voucher_id if voucher else '' }}">
+        <a href="{{ url_for('customer.checkout', payment_method=method, card_id=card.card_id if card else '', voucher_id=voucher.voucher_id if voucher else '') }}" class="btn btn-ghost">← Change payment or voucher</a>
+        <button type="submit" class="btn btn-primary btn-lg" {{ 'disabled' if wallet_short }}>Place order · {{ bd.total | egp }}</button>
+    </form>
+</div>
+{% endblock %}

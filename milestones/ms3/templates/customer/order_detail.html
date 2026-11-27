@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% import 'customer/_macros.html' as ui with context %}
+{% block title %}Order #{{ o.order_id }} | MAGYM Logistics{% endblock %}
+
+{% block content %}
+{% include 'customer/_nav.html' %}
+
+<div class="space-y-6">
+
+    <div class="text-sm breadcrumbs">
+        <ul>
+            <li><a href="{{ url_for('customer.orders') }}">My orders</a></li>
+            <li>Order #{{ o.order_id }}</li>
+        </ul>
+    </div>
+
+    <!-- Summary: My_Order_History -->
+    <div class="bg-base-100 rounded-2xl shadow-sm p-6 md:p-8">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold flex items-center gap-3">Order #{{ o.order_id }} {{ ui.status_badge(o.status) }}</h1>
+                <p class="text-base-content/60 mt-1">Placed {{ o.order_date | dt }} · delivered in {{ o.zone_name }}</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                {% if o.can_cancel %}
+                    <button type="button" class="btn btn-error btn-outline" onclick="document.getElementById('cancel-dialog').showModal()">Cancel order</button>
+                {% endif %}
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('reorder-dialog').showModal()">↻ Reorder</button>
+            </div>
+        </div>
+
+        <div class="stats stats-vertical sm:stats-horizontal bg-base-200 w-full mt-6">
+            <div class="stat">
+                <div class="stat-title">Total paid</div>
+                <div class="stat-value text-2xl">{{ o.total_amount | egp }}</div>
+                <div class="stat-desc">{{ o.payment_method or '—' }}{% if o.discount_amount and o.discount_amount > 0 %} · voucher saved {{ o.discount_amount | egp }}{% endif %}</div>
+            </div>
+            <div class="stat">
+                <div class="stat-title">Refunded</div>
+                <div class="stat-value text-2xl">{{ (o.refunded_amount or 0) | egp }}</div>
+                <div class="stat-desc">{{ 'to your wallet' if o.payment_method != 'Cash' else 'not collected (cash)' }}</div>
+            </div>
+            <div class="stat">
+                <div class="stat-title">{{ 'Estimated arrival' if o.eta else 'Parts' }}</div>
+                {% if o.eta %}
+                    <div class="stat-value text-2xl">{{ o.eta | dt('%I:%M %p') }}</div>
+                    <div class="stat-desc">{% if o.eta_minutes is not none and o.eta_minutes > 0 %}in about {{ o.eta_minutes }} min{% else %}any minute now{% endif %}</div>
+                {% else %}
+                    <div class="stat-value text-2xl">{{ o.number_of_suborders }}</div>
+                    <div class="stat-desc">one per business</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Parts: h_OrderSubOrders + estimate from ZoneDeliveryPerformance -->
+    <h2 class="text-2xl font-bold">Where each part is now</h2>
+
+    {% for p in o.parts %}
+    <div id="part-{{ p.suborder_id }}" class="card bg-base-100 shadow-sm border border-base-300 scroll-mt-6">
+        <div class="card-body gap-4">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                <div>
+                    <h3 class="card-title">
+                        <a class="link link-hover" href="{{ url_for('customer.business_page', business_id=p.business_id) }}">{{ p.business_name }}</a>
+                        {{ ui.status_badge(p.status) }}
+                    </h3>
+                    <p class="text-sm text-base-content/60">
+                        Items {{ p.total_price | egp }} + delivery {{ p.delivery_fee | egp }}
+                        {% if p.rider_name %} · rider <strong>{{ p.rider_name }}</strong>{% endif %}
+                    </p>
+                </div>
+            </div>
+
+            {{ ui.journey(p) }}
+            {{ ui.eta_line(p) }}
+
+            {% if p.status == 'Delivered' %}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 pt-2 border-t border-base-200">
+
+                <!-- Submit_Feedback -->
+                <div class="lg:col-span-2">
+                    <h4 class="font-semibold mb-2">Review {{ p.business_name }}</h4>
+                    {% if p.has_feedback %}
+                        <p class="text-success text-sm">✓ You already reviewed this part. Thank you!</p>
+                    {% else %}
+                    <form method="post" action="{{ url_for('customer.submit_feedback', order_id=o.order_id, suborder_id=p.suborder_id) }}" class="space-y-2">
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm">Your rating</span>
+                            <div class="rating rating-md" role="radiogroup" aria-label="Rating for {{ p.business_name }}">
+                                {% for i in range(1, 6) %}
+                                <input type="radio" name="rating" value="{{ i }}" class="mask mask-star-2 bg-warning" aria-label="{{ i }} star{{ 's' if i > 1 }}" {{ 'required' if i == 1 }} {{ 'checked' if i == 5 }}>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <input type="text" name="headline" required maxlength="100" placeholder="Headline, e.g. Hot and on time" class="input input-bordered input-sm w-full">
+                        <textarea name="description" maxlength="500" rows="2" placeholder="Tell others more (optional, up to 500 characters)" class="textarea textarea-bordered w-full text-sm"></textarea>
+                        <button type="submit" class="btn btn-primary btn-sm">Post review</button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <!-- Rate_Rider -->
+                <div>
+                    <h4 class="font-semibold mb-2">Rate your rider</h4>
+                    {% if not p.delivery_id %}
+                        <p class="text-sm text-base-content/60">No rider was assigned to this part.</p>
+                    {% elif p.rider_rating %}
+                        <p class="text-sm">You rated {{ p.rider_name or 'your rider' }}
+                            <span class="text-warning">{% for i in range(1, 6) %}{{ '★' if i <= p.rider_rating else '☆' }}{% endfor %}</span>
+                        </p>
+                    {% else %}
+                    <form method="post" action="{{ url_for('customer.rate_rider', order_id=o.order_id, suborder_id=p.suborder_id) }}" class="space-y-2">
+                        <p class="text-sm text-base-content/60">How was {{ p.rider_name or 'your rider' }}?</p>
+                        <div class="rating rating-md" role="radiogroup" aria-label="Rider rating">
+                            {% for i in range(1, 6) %}
+                            <input type="radio" name="rider_rating" value="{{ i }}" class="mask mask-star-2 bg-warning" aria-label="{{ i }} star{{ 's' if i > 1 }}" {{ 'required' if i == 1 }} {{ 'checked' if i == 5 }}>
+                            {% endfor %}
+                        </div>
+                        <div><button type="submit" class="btn btn-outline btn-sm">Rate rider</button></div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% elif p.is_active %}
+                <p class="text-xs text-base-content/50">You can review this part and rate the rider once it is delivered.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Cancel_Order confirmation -->
+{% if o.can_cancel %}
+<dialog id="cancel-dialog" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">Cancel order #{{ o.order_id }}?</h3>
+        <p class="py-3">
+            All {{ o.parts | selectattr('is_active') | list | length }} part(s) of this order that have not been picked up will be cancelled and the riders released.
+        </p>
+        <div class="rounded-xl bg-base-200 p-4">
+            {% if o.payment_method == 'Cash' %}
+                You chose cash on delivery, so you will not pay the <strong>{{ o.refund_if_cancelled | egp }}</strong>.
+            {% else %}
+                <strong>{{ o.refund_if_cancelled | egp }}</strong> will be refunded to your wallet.
+            {% endif %}
+            {% if o.discount_amount and o.discount_amount > 0 %}<br><span class="text-sm text-base-content/60">Your voucher will be returned so you can use it again.</span>{% endif %}
+        </div>
+        <p class="text-sm text-error mt-3">This cannot be undone.</p>
+        <div class="modal-action">
+            <form method="dialog"><button class="btn">Keep my order</button></form>
+            <form method="post" action="{{ url_for('customer.cancel_order', order_id=o.order_id) }}">
+                <button type="submit" class="btn btn-error">Yes, cancel order</button>
+            </form>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+{% endif %}
+
+<!-- Reorder -->
+<dialog id="reorder-dialog" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">Order #{{ o.order_id }} again</h3>
+        <p class="py-3 text-base-content/70">
+            We put the products that are still available into a new cart. The chosen address becomes your active address.
+        </p>
+        {% if reorder_addresses %}
+        <form method="post" action="{{ url_for('customer.reorder', order_id=o.order_id) }}" class="space-y-3">
+            <label class="form-control w-full">
+                <span class="label-text mb-1">Deliver to (addresses in {{ o.zone_name }})</span>
+                <select name="address_id" required class="select select-bordered w-full">
+                    {% for a in reorder_addresses %}
+                        <option value="{{ a.address_id }}" {{ 'selected' if loop.first }}>{{ a.description }}{{ ' (active)' if a.is_active }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            {% if other_zone_count %}
+                <p class="text-xs text-base-content/50">{{ other_zone_count }} of your address(es) are in other zones. The businesses of this order only deliver in {{ o.zone_name }}.</p>
+            {% endif %}
+            <div class="modal-action">
+                <button type="button" class="btn" onclick="this.closest('dialog').close()">Not now</button>
+                <button type="submit" class="btn btn-primary">Create the cart</button>
+            </div>
+        </form>
+        {% else %}
+            <div class="alert alert-warning">
+                <span>You have no address in {{ o.zone_name }}, where the businesses of this order deliver. Add an address in {{ o.zone_name }} first{% if has_endpoint('customer.addresses') %} from <a class="link" href="{{ url_for('customer.addresses') }}">your addresses</a>{% endif %}.</span>
+            </div>
+            <div class="modal-action"><form method="dialog"><button class="btn">Close</button></form></div>
+        {% endif %}
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+{% endblock %}

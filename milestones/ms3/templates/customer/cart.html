@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% import 'customer/_macros.html' as ui with context %}
+{% block title %}My cart | MAGYM Logistics{% endblock %}
+
+{% block content %}
+{% include 'customer/_nav.html' %}
+
+<div class="space-y-6">
+
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-2">
+        <div>
+            <h1 class="text-3xl font-bold">My cart</h1>
+            {% if profile and profile.active_address %}
+                <p class="text-base-content/60 mt-1">Delivering to <strong>{{ profile.active_address }}</strong> ({{ profile.active_zone }}) ·
+                    <a href="{{ url_for('customer.addresses') }}" class="link link-primary">change</a></p>
+            {% endif %}
+        </div>
+        {% if has_endpoint('customer.browse') and cart_id %}
+            <a href="{{ url_for('customer.browse') }}" class="btn btn-outline btn-sm">🔎 Add more products</a>
+        {% endif %}
+    </div>
+
+    {% if not profile or not profile.active_address %}
+        <!-- State 1: no active address -->
+        <div class="bg-base-100 rounded-2xl shadow-sm p-10 text-center">
+            <div class="text-4xl">📍</div>
+            <p class="text-lg font-semibold mt-2">Add a delivery address first.</p>
+            <p class="text-base-content/60">Every cart belongs to one of your addresses.</p>
+            <a href="{{ url_for('customer.addresses') }}" class="btn btn-primary mt-4">Add an address</a>
+        </div>
+
+    {% elif not cart_id %}
+        <!-- State 2: address but no cart (3.5.d Create_Cart) -->
+        <div class="bg-base-100 rounded-2xl shadow-sm p-10 text-center">
+            <div class="text-4xl">🛒</div>
+            <p class="text-lg font-semibold mt-2">You don't have a cart for "{{ profile.active_address }}" yet.</p>
+            <p class="text-base-content/60">Start one, then add products from businesses in {{ profile.active_zone }}.</p>
+            <form method="post" action="{{ url_for('customer.create_cart') }}" class="mt-4">
+                <button type="submit" class="btn btn-primary">Start a cart</button>
+            </form>
+        </div>
+
+    {% elif not items %}
+        <!-- State 3a: empty cart -->
+        <div class="bg-base-100 rounded-2xl shadow-sm p-10 text-center">
+            <div class="text-4xl">🧺</div>
+            <p class="text-lg font-semibold mt-2">Your cart is empty.</p>
+            <p class="text-base-content/60">Browse businesses that deliver to {{ profile.active_zone }} and add products.</p>
+            {% if has_endpoint('customer.browse') %}
+                <a href="{{ url_for('customer.browse') }}" class="btn btn-primary mt-4">Browse businesses</a>
+            {% endif %}
+        </div>
+
+    {% else %}
+        <!-- State 3b: items (h_CartItems), grouped by business -->
+        {% if problems %}
+        <div class="alert alert-warning">
+            <div>
+                <p class="font-semibold">Fix these before checking out:</p>
+                <ul class="list-disc ml-5 text-sm">{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div class="lg:col-span-2 space-y-4">
+                {% for g in groups %}
+                <div class="bg-base-100 rounded-2xl shadow-sm p-6">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <h2 class="text-lg font-bold">
+                            {% if has_endpoint('customer.business_page') %}
+                                <a href="{{ url_for('customer.business_page', business_id=g.business_id) }}" class="link link-hover">{{ g.business_name }}</a>
+                            {% else %}{{ g.business_name }}{% endif %}
+                        </h2>
+                        {{ ui.open_badge(g.is_open_now, g.opening_hour, g.closing_hour) }}
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="table table-sm">
+                            <thead><tr><th>Product</th><th class="text-right">Price</th><th class="text-center">Qty</th><th class="text-right">Total</th><th></th></tr></thead>
+                            <tbody>
+                            {% for i in g['items'] %}
+                                <tr class="{{ 'opacity-50' if not i.is_available }}">
+                                    <td>
+                                        <div class="font-medium">{{ i.product_name }}</div>
+                                        {% if i.notes %}<div class="text-xs text-base-content/60">Note: {{ i.notes }}</div>{% endif %}
+                                        {% if not i.is_available %}<div class="badge badge-error badge-sm mt-1">No longer available — remove it to check out</div>{% endif %}
+                                    </td>
+                                    <td class="text-right whitespace-nowrap">{{ i.unit_price | egp }}</td>
+                                    <td class="text-center">{{ i.quantity }}</td>
+                                    <td class="text-right whitespace-nowrap font-semibold">{{ i.line_total | egp }}</td>
+                                    <td class="text-right">
+                                        <form method="post" action="{{ url_for('customer.remove_from_cart', product_id=i.product_id) }}">
+                                            <button type="submit" class="btn btn-ghost btn-xs text-error" title="Remove {{ i.product_name }}">Remove</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex justify-end mt-2 text-sm">
+                        <span class="text-base-content/60 mr-2">{{ g.business_name }} subtotal</span>
+                        <span class="font-semibold">{{ g.subtotal | egp }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="bg-base-100 rounded-2xl shadow-sm p-6 space-y-3 lg:sticky lg:top-4">
+                <h2 class="text-lg font-bold">Summary</h2>
+                <div class="flex justify-between"><span>Items ({{ item_count }})</span><span>{{ items_subtotal | egp }}</span></div>
+                <div class="flex justify-between text-base-content/70">
+                    <span>Delivery ({{ groups | length }} × {{ zone_fee | egp }})</span>
+                    <span>{{ (zone_fee * (groups | length)) | egp }}</span>
+                </div>
+                <p class="text-xs text-base-content/50">Each business delivers separately, so each pays the {{ profile.active_zone }} delivery fee. Vouchers are applied at checkout.</p>
+                <div class="divider my-1"></div>
+                <div class="flex justify-between text-lg font-bold">
+                    <span>Before vouchers</span><span>{{ (items_subtotal + zone_fee * (groups | length)) | egp }}</span>
+                </div>
+                <a href="{{ url_for('customer.checkout') }}" class="btn btn-primary w-full {{ 'btn-disabled' if problems }}"
+                   {% if problems %}aria-disabled="true" tabindex="-1"{% endif %}>Go to checkout</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

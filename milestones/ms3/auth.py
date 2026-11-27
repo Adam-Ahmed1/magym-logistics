@@ -268,7 +268,14 @@ def register(role):
             )
             return redirect(url_for('auth.login', role=role))
 
-        flash(error_codes.get_message(rc), "error")
+        flash(error_codes.get_message(rc, {
+            -1: "Some details are missing or invalid. Fill in first name, last name, username, "
+                "password and email, use an 11-digit phone number and a birth date in the past.",
+            -2: "This username or email is already taken. Choose another one, or log in instead."
+                if role != 'rider' else
+                "This username, email, plate number or license number is already registered. "
+                "Check them and try again.",
+        }), "error")
 
     return render_template(
         'register.html',

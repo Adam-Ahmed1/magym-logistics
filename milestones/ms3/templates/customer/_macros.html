@@ -1,0 +1,98 @@
+{# Reusable pieces for the Section 3.6 customer pages. #}
+
+{# Read-only star display, e.g. 4.25 -> ★★★★☆ 4.25 (12) #}
+{% macro stars(avg, count) -%}
+    {% if avg is not none and (count or 0) > 0 %}
+        {% set full = (avg | float) | round(0, 'common') | int %}
+        <span class="inline-flex items-center gap-1 text-sm" title="{{ '%.2f' | format(avg | float) }} out of 5">
+            <span class="text-warning tracking-tight">{% for i in range(1, 6) %}{{ '★' if i <= full else '☆' }}{% endfor %}</span>
+            <span class="font-semibold">{{ '%.1f' | format(avg | float) }}</span>
+            <span class="text-base-content/50">({{ count }})</span>
+        </span>
+    {% else %}
+        <span class="text-sm text-base-content/50">No ratings yet</span>
+    {% endif %}
+{%- endmacro %}
+
+{# Heart button that calls Toggle_Favorite. #}
+{% macro fav_button(item_type, item_id, item_name, is_fav, size='btn-sm') -%}
+    <form method="post" action="{{ url_for('customer.toggle_favorite') }}" class="inline">
+        <input type="hidden" name="item_type" value="{{ item_type }}">
+        <input type="hidden" name="item_id" value="{{ item_id }}">
+        <input type="hidden" name="item_name" value="{{ item_name }}">
+        <input type="hidden" name="next" value="{{ request.full_path if request.query_string else request.path }}">
+        {% if is_fav %}
+            <button type="submit" class="btn {{ size }} btn-ghost text-error" title="Remove {{ item_name }} from favorites">
+                ♥ <span class="hidden sm:inline">Saved</span>
+            </button>
+        {% else %}
+            <button type="submit" class="btn {{ size }} btn-ghost" title="Add {{ item_name }} to favorites">
+                ♡ <span class="hidden sm:inline">Save</span>
+            </button>
+        {% endif %}
+    </form>
+{%- endmacro %}
+
+{# Open-now badge #}
+{% macro open_badge(is_open, opening=None, closing=None) -%}
+    {% if is_open %}
+        <span class="badge badge-success badge-outline">Open now</span>
+    {% else %}
+        <span class="badge badge-ghost" title="Opens {{ opening | hm }}">Closed{% if opening %} · opens {{ opening | hm }}{% endif %}</span>
+    {% endif %}
+{%- endmacro %}
+
+{# Status badge for an order or a part of an order #}
+{% macro status_badge(status) -%}
+    {% set cls = {
+        'Placed': 'badge-info',
+        'Assigned': 'badge-info',
+        'Picked Up': 'badge-warning',
+        'In Progress': 'badge-warning',
+        'Delivered': 'badge-success',
+        'Cancelled': 'badge-error',
+    }.get(status, 'badge-ghost') %}
+    <span class="badge {{ cls }}">{{ 'On the way' if status == 'Picked Up' else status }}</span>
+{%- endmacro %}
+
+{# Journey of one part of an order: Placed -> Rider assigned -> On the way -> Delivered #}
+{% macro journey(part) -%}
+    {% if part.is_cancelled %}
+        <div class="alert alert-error py-2 text-sm">This part was cancelled{% if part.rider_name %} (rider {{ part.rider_name }}){% endif %}.</div>
+    {% else %}
+        <ul class="steps steps-horizontal w-full text-xs">
+            {% for step in PART_STEPS %}
+                {% set time = {
+                    'Assigned': part.assigned_at,
+                    'Picked Up': part.picked_up_at,
+                    'Delivered': part.delivered_at,
+                }.get(step) %}
+                <li class="step {{ 'step-primary' if loop.index0 <= part.step_index }}"
+                    data-content="{{ '✓' if loop.index0 < part.step_index or (loop.index0 == part.step_index and step == 'Delivered') else ('●' if loop.index0 == part.step_index else '') }}">
+                    <span class="leading-tight">
+                        {{ STEP_LABELS[step] }}
+                        {% if time and loop.index0 <= part.step_index %}<br><span class="text-base-content/50">{{ time | dt('%I:%M %p') }}</span>{% endif %}
+                    </span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{%- endmacro %}
+
+{# Estimated arrival line for one active part #}
+{% macro eta_line(part) -%}
+    {% if part.is_active and part.eta %}
+        <div class="flex flex-wrap items-baseline gap-x-2">
+            {% if part.eta_minutes is not none and part.eta_minutes > 0 %}
+                <span class="font-semibold">Arrives in about {{ part.eta_minutes }} min</span>
+                <span class="text-base-content/60 text-sm">(around {{ part.eta | dt('%I:%M %p') }})</span>
+            {% else %}
+                <span class="font-semibold">Arriving any minute now</span>
+                <span class="text-base-content/60 text-sm">(expected around {{ part.eta | dt('%I:%M %p') }}, running a little late)</span>
+            {% endif %}
+        </div>
+        {% if part.eta_basis %}<p class="text-xs text-base-content/50 mt-1">How we estimate: {{ part.eta_basis }}</p>{% endif %}
+    {% elif part.status == 'Delivered' %}
+        <span class="text-sm text-success">Delivered {{ part.delivered_at | dt }}{% if part.actual_minutes is not none %} · took {{ part.actual_minutes }} min{% endif %}</span>
+    {% endif %}
+{%- endmacro %}

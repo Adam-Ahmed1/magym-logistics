@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Checkout | MAGYM Logistics{% endblock %}
+
+{% block content %}
+{% include 'customer/_nav.html' %}
+
+<div class="space-y-6">
+
+    <div class="text-sm breadcrumbs">
+        <ul>
+            <li><a href="{{ url_for('customer.cart') }}">Cart</a></li>
+            <li class="font-semibold">Payment</li>
+            <li class="text-base-content/50">Review &amp; confirm</li>
+        </ul>
+    </div>
+
+    <h1 class="text-3xl font-bold">Checkout</h1>
+
+    {% if problems %}
+    <div class="alert alert-warning">
+        <div>
+            <p class="font-semibold">Your order will be refused until you fix these:</p>
+            <ul class="list-disc ml-5 text-sm">{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul>
+            <a href="{{ url_for('customer.cart') }}" class="link text-sm">Back to the cart</a>
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('customer.checkout_preview') }}" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+        <div class="lg:col-span-2 space-y-6">
+
+            <!-- Payment method -->
+            <div class="bg-base-100 rounded-2xl shadow-sm p-6">
+                <h2 class="text-lg font-bold mb-3">1. How do you want to pay?</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {% set m = chosen.payment_method or 'Cash' %}
+                    <label class="flex items-start gap-3 rounded-xl border border-base-300 p-4 cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                        <input type="radio" name="payment_method" value="Cash" class="radio radio-primary mt-1" {{ 'checked' if m == 'Cash' }} required>
+                        <span><span class="font-semibold">💵 Cash</span><br><span class="text-sm text-base-content/60">Pay the rider on delivery.</span></span>
+                    </label>
+                    <label class="flex items-start gap-3 rounded-xl border border-base-300 p-4 cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                        <input type="radio" name="payment_method" value="Card" class="radio radio-primary mt-1" {{ 'checked' if m == 'Card' }}>
+                        <span><span class="font-semibold">💳 Card</span><br><span class="text-sm text-base-content/60">One of your saved cards.</span></span>
+                    </label>
+                    <label class="flex items-start gap-3 rounded-xl border border-base-300 p-4 cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                        <input type="radio" name="payment_method" value="Wallet" class="radio radio-primary mt-1" {{ 'checked' if m == 'Wallet' }}>
+                        <span><span class="font-semibold">👛 Wallet</span><br><span class="text-sm text-base-content/60">Balance: {{ profile.wallet_balance | egp }}</span></span>
+                    </label>
+                </div>
+
+                <div id="card-picker" class="mt-4">
+                    <label class="form-control">
+                        <span class="label-text font-semibold mb-1">Card to pay with <span class="font-normal text-base-content/50">(only for card payments)</span></span>
+                        {% if cards %}
+                        <select name="card_id" class="select select-bordered w-full md:w-96">
+                            <option value="">Choose a card</option>
+                            {% for c in cards %}
+                                <option value="{{ c.card_id }}" {{ 'selected' if chosen.card_id == c.card_id }}>•••• {{ c.last_four_digits }} · {{ c.card_holder_name }} · exp {{ c.expiration_date.strftime('%m/%Y') }}</option>
+                            {% endfor %}
+                        </select>
+                        {% else %}
+                        <span class="text-sm text-base-content/60">You have no saved cards. <a href="{{ url_for('customer.cards') }}" class="link link-primary">Save a card</a> to pay by card.</span>
+                        {% endif %}
+                    </label>
+                </div>
+            </div>
+
+            <!-- Voucher -->
+            <div class="bg-base-100 rounded-2xl shadow-sm p-6">
+                <h2 class="text-lg font-bold mb-3">2. Use a voucher? <span class="font-normal text-base-content/50 text-sm">(optional)</span></h2>
+                {% if vouchers %}
+                <select name="voucher_id" class="select select-bordered w-full md:w-[28rem]">
+                    <option value="">No voucher</option>
+                    {% for v in vouchers %}
+                        <option value="{{ v.voucher_id }}" {{ 'selected' if chosen.voucher_id == v.voucher_id }}>{{ v.label }}</option>
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-base-content/50 mt-2">The discount applies to your items, not the delivery fees. You'll see exactly how much it saves on the next step.</p>
+                {% else %}
+                <p class="text-base-content/60 text-sm">You have no vouchers you can use right now.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Order summary -->
+        <div class="bg-base-100 rounded-2xl shadow-sm p-6 space-y-3 lg:sticky lg:top-4">
+            <h2 class="text-lg font-bold">Your order</h2>
+            <p class="text-sm text-base-content/60">To {{ profile.active_address }} ({{ profile.active_zone }})</p>
+            {% for g in groups %}
+                <div class="flex justify-between text-sm"><span>{{ g.business_name }} ({{ g['items'] | length }} product{{ 's' if g['items'] | length != 1 }})</span><span>{{ g.subtotal | egp }}</span></div>
+            {% endfor %}
+            <div class="divider my-1"></div>
+            <div class="flex justify-between"><span>Items</span><span>{{ items_subtotal | egp }}</span></div>
+            <button type="submit" class="btn btn-primary w-full">Review the total →</button>
+            <a href="{{ url_for('customer.cart') }}" class="btn btn-ghost btn-sm w-full">Back to cart</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Show the card list only when "Card" is chosen.
+    (function () {
+        var picker = document.getElementById('card-picker');
+        function update() {
+            var checked = document.querySelector('input[name="payment_method"]:checked');
+            picker.style.display = (checked && checked.value === 'Card') ? '' : 'none';
+        }
+        document.querySelectorAll('input[name="payment_method"]').forEach(function (r) {
+            r.addEventListener('change', update);
+        });
+        update();
+    })();
+</script>
+{% endblock %}
